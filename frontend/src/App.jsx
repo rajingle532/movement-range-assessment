@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import LiveSession from './pages/LiveSession';
 import Patients from './pages/Patients';
+import Reports from './pages/Reports';
 import Login from './pages/Login';
 
 // Secure route guard
@@ -60,6 +61,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <LiveSession />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/reports" 
+            element={
+              <ProtectedRoute>
+                <Reports />
               </ProtectedRoute>
             } 
           />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, Users, LayoutDashboard, LogOut, Settings } from 'lucide-react';
+import { Activity, Users, LayoutDashboard, LogOut, FileText } from 'lucide-react';
 
 const Navbar = () => {
     const location = useLocation();
@@ -24,6 +24,7 @@ const Navbar = () => {
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
         { name: 'Patients', path: '/patients', icon: Users },
         { name: 'Live Session', path: '/live', icon: Activity },
+        { name: 'Reports', path: '/reports', icon: FileText },
     ];
 
     return (
