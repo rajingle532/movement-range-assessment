@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import PatientCard from '../components/PatientCard';
-import { UserPlus, Search, AlertCircle, CheckCircle, RefreshCw, Layers } from 'lucide-react';
+import { UserPlus, Search, AlertCircle, CheckCircle, RefreshCw, Layers, Download } from 'lucide-react';
 import { api } from '../services/api';
 
 const Patients = () => {
@@ -73,6 +73,11 @@ const Patients = () => {
         }
     };
 
+    const handleExportCSV = () => {
+        // Direct browser download from the API
+        window.open('http://localhost:8000/api/patients/export/csv', '_blank');
+    };
+
     // Filter patients based on search query
     const filteredPatients = patients.filter(patient => 
         patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -111,6 +116,14 @@ const Patients = () => {
                             className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white p-2.5 rounded-xl transition-all cursor-pointer"
                         >
                             <RefreshCw size={16} className={isLoading ? "animate-spin text-blue-400" : ""} />
+                        </button>
+                        <button 
+                            onClick={handleExportCSV}
+                            title="Export to CSV"
+                            className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md shadow-emerald-600/10 cursor-pointer"
+                        >
+                            <Download size={14} />
+                            Export CSV
                         </button>
                     </div>
                 </div>

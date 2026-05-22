@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PatientCard from '../components/PatientCard';
 import ProgressChart from '../components/ProgressChart';
-import { Plus, Users, TrendingUp, Clock, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plus, Users, TrendingUp, Clock, AlertCircle, RefreshCw, Download } from 'lucide-react';
 import { api } from '../services/api';
 
 const Dashboard = () => {
@@ -46,6 +46,11 @@ const Dashboard = () => {
         }
     };
 
+    const handleExportCSV = () => {
+        // Direct browser download from the API
+        window.open('http://localhost:8000/api/patients/export/csv', '_blank');
+    };
+
     useEffect(() => {
         fetchDashboardData();
     }, []);
@@ -68,10 +73,18 @@ const Dashboard = () => {
                     <div className="flex gap-3">
                         <button 
                             onClick={fetchDashboardData}
+                            title="Refresh Data"
                             className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-xl font-bold flex items-center gap-2 transition-all cursor-pointer"
                         >
                             <RefreshCw size={16} className={isLoading ? "animate-spin text-blue-400" : "text-slate-400"} />
-                            Sync Data
+                        </button>
+                        <button 
+                            onClick={handleExportCSV}
+                            className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-xl font-bold flex items-center gap-2 transition-all cursor-pointer"
+                            title="Export all patients to CSV"
+                        >
+                            <Download size={16} className="text-emerald-400" />
+                            <span className="hidden sm:inline">Export</span>
                         </button>
                         <button 
                             onClick={() => navigate('/patients')}
