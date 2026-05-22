@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from datetime import datetime
-from backend.cv.angle_calculator import calculate_angle
+from backend.cv.angle_calculator import calculate_angle, get_landmark_coords
 from backend.cv.rom_classifier import classify_rom
 from backend.cv.smoother import MovingAverageSmoother
 from backend.cv.frame_encoder import encode_frame_to_base64
@@ -50,28 +50,56 @@ class CVService:
                 landmark_drawing_spec=self.mp_drawing_styles.get_default_pose_landmarks_style()
             )
 
+            # Visibility Threshold Check
+            visibility_threshold = 0.5
+            
             # 2. Calculate Angles
             # Elbow (Shoulder -> Elbow -> Wrist)
-            shoulder = [landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].x, landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].y]
-            elbow = [landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW].x, landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW].y]
-            wrist = [landmarks[self.mp_pose.PoseLandmark.LEFT_WRIST].x, landmarks[self.mp_pose.PoseLandmark.LEFT_WRIST].y]
+            if (landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].visibility > visibility_threshold and
+                landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW].visibility > visibility_threshold and
+                landmarks[self.mp_pose.PoseLandmark.LEFT_WRIST].visibility > visibility_threshold):
+                
+                shoulder = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER])
+                elbow = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW])
+                wrist = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_WRIST])
+                
+                raw_elbow = calculate_angle(shoulder, elbow, wrist)
+                angles["elbow"] = self.smoothers["elbow"].smooth(raw_elbow)
+            else:
+                angles["elbow"] = np.mean(self.smoothers["elbow"].history) if self.smoothers["elbow"].history else 0
             
-            raw_elbow = calculate_angle(shoulder, elbow, wrist)
-            angles["elbow"] = self.smoothers["elbow"].smooth(raw_elbow)
             status["elbow"] = classify_rom("elbow", angles["elbow"])[0]
 
             # Knee (Hip -> Knee -> Ankle)
-            hip = [landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].x, landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].y]
-            knee = [landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].x, landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].y]
-            ankle = [landmarks[self.mp_pose.PoseLandmark.LEFT_ANKLE].x, landmarks[self.mp_pose.PoseLandmark.LEFT_ANKLE].y]
-            
-            raw_knee = calculate_angle(hip, knee, ankle)
-            angles["knee"] = self.smoothers["knee"].smooth(raw_knee)
+            if (landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].visibility > visibility_threshold and
+                landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE].visibility > visibility_threshold and
+                landmarks[self.mp_pose.PoseLandmark.LEFT_ANKLE].visibility > visibility_threshold):
+                
+                hip = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_HIP])
+                knee = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_KNEE])
+                ankle = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_ANKLE])
+                
+                raw_knee = calculate_angle(hip, knee, ankle)
+                angles["knee"] = self.smoothers["knee"].smooth(raw_knee)
+            else:
+                angles["knee"] = np.mean(self.smoothers["knee"].history) if self.smoothers["knee"].history else 0
+                
             status["knee"] = classify_rom("knee", angles["knee"])[0]
 
             # Shoulder (Hip -> Shoulder -> Elbow)
-            raw_shoulder = calculate_angle(hip, shoulder, elbow)
-            angles["shoulder"] = self.smoothers["shoulder"].smooth(raw_shoulder)
+            if (landmarks[self.mp_pose.PoseLandmark.LEFT_HIP].visibility > visibility_threshold and
+                landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER].visibility > visibility_threshold and
+                landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW].visibility > visibility_threshold):
+                
+                hip = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_HIP])
+                shoulder = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_SHOULDER])
+                elbow = get_landmark_coords(landmarks[self.mp_pose.PoseLandmark.LEFT_ELBOW])
+                
+                raw_shoulder = calculate_angle(hip, shoulder, elbow)
+                angles["shoulder"] = self.smoothers["shoulder"].smooth(raw_shoulder)
+            else:
+                angles["shoulder"] = np.mean(self.smoothers["shoulder"].history) if self.smoothers["shoulder"].history else 0
+                
             status["shoulder"] = classify_rom("shoulder", angles["shoulder"])[0]
 
             # 3. Encode Annotated Frame to Base64
