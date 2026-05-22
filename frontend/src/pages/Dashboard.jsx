@@ -56,10 +56,10 @@ const Dashboard = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-slate-950 pb-16 text-slate-100 font-sans relative overflow-hidden">
+        <div className="min-h-screen bg-slate-950 bg-grid-pattern pb-16 text-slate-100 font-sans relative overflow-hidden">
             {/* Soft background glows */}
-            <div className="absolute top-[10%] right-[5%] w-[400px] h-[400px] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[20%] left-[5%] w-[400px] h-[400px] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none" />
+            <div className="absolute top-[10%] right-[5%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none animate-pulse-slow" />
+            <div className="absolute bottom-[20%] left-[5%] w-[500px] h-[500px] rounded-full bg-emerald-600/10 blur-[150px] pointer-events-none animate-pulse-slow" />
 
             <div className="max-w-7xl mx-auto px-8 pt-10">
                 {/* Header */}
@@ -106,8 +106,8 @@ const Dashboard = () => {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                     {/* Stat Card 1 */}
-                    <div className="bg-slate-900/60 backdrop-blur border border-slate-800 p-6 rounded-2xl relative overflow-hidden group hover:border-blue-500/30 transition-all duration-300">
-                        <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
+                    <div className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-blue-500/40 hover:bg-slate-800/40 transition-all duration-500 animate-fade-in-up hover:-translate-y-1 shadow-lg shadow-black/20">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-blue-600 opacity-80" />
                         <div className="flex items-center gap-5">
                             <div className="p-3.5 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/10">
                                 <Users size={22} />
@@ -122,8 +122,8 @@ const Dashboard = () => {
                     </div>
 
                     {/* Stat Card 2 */}
-                    <div className="bg-slate-900/60 backdrop-blur border border-slate-800 p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/30 transition-all duration-300">
-                        <div className="absolute top-0 left-0 w-1.5 h-full bg-cyan-500" />
+                    <div className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/40 hover:bg-slate-800/40 transition-all duration-500 animate-fade-in-up hover:-translate-y-1 shadow-lg shadow-black/20" style={{animationDelay: '100ms'}}>
+                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-cyan-600 opacity-80" />
                         <div className="flex items-center gap-5">
                             <div className="p-3.5 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/10">
                                 <TrendingUp size={22} />
@@ -136,8 +136,8 @@ const Dashboard = () => {
                     </div>
 
                     {/* Stat Card 3 */}
-                    <div className="bg-slate-900/60 backdrop-blur border border-slate-800 p-6 rounded-2xl relative overflow-hidden group hover:border-emerald-500/30 transition-all duration-300">
-                        <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+                    <div className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-emerald-500/40 hover:bg-slate-800/40 transition-all duration-500 animate-fade-in-up hover:-translate-y-1 shadow-lg shadow-black/20" style={{animationDelay: '200ms'}}>
+                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-emerald-600 opacity-80" />
                         <div className="flex items-center gap-5">
                             <div className="p-3.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/10">
                                 <Clock size={22} />
@@ -160,8 +160,8 @@ const Dashboard = () => {
                     </div>
 
                     {/* Active Directory Quick List */}
-                    <div className="space-y-6">
-                        <div className="bg-slate-900/60 backdrop-blur border border-slate-800 p-6 rounded-2xl shadow-xl shadow-black/10">
+                    <div className="space-y-6 animate-fade-in-up" style={{animationDelay: '300ms'}}>
+                        <div className="glass-panel p-6 rounded-2xl shadow-2xl shadow-black/20">
                             <div className="flex justify-between items-center mb-5">
                                 <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Recently Active</h3>
                                 <span className="bg-blue-600/10 text-blue-400 text-[9px] px-2.5 py-1 rounded-full font-bold uppercase border border-blue-500/10">

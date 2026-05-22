@@ -4,11 +4,21 @@
 
 @layer base {
   body {
-    @apply bg-medical-light text-text-primary;
+    @apply bg-slate-950 text-slate-100;
     margin: 0;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.glass-panel {
+  @apply bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)];
 }
 
 /* Custom Scrollbar */

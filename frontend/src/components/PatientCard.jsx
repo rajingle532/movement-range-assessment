@@ -16,7 +16,7 @@ const PatientCard = ({ patient }) => {
     return (
         <div 
             onClick={() => navigate('/live')}
-            className="bg-slate-900/60 backdrop-blur border border-slate-800 p-4.5 rounded-2xl hover:border-blue-500/40 hover:bg-slate-800/40 transition-all duration-300 group cursor-pointer shadow-lg shadow-black/5"
+            className="glass-panel p-4.5 rounded-2xl hover:border-blue-500/40 hover:bg-slate-800/40 transition-all duration-300 group cursor-pointer shadow-lg shadow-black/20 hover:-translate-y-0.5"
         >
             <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4.5">
