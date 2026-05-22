@@ -2,8 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PatientCard from '../components/PatientCard';
 import ProgressChart from '../components/ProgressChart';
-import { Plus, Users, TrendingUp, Clock, AlertCircle, RefreshCw, Download } from 'lucide-react';
+import { Plus, Users, TrendingUp, Clock, AlertCircle, RefreshCw, Download, Activity, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
+
+const StatCard = ({ icon: Icon, label, value, color, delay }) => (
+    <div className="stat-card animate-fade-in-up" style={{ animationDelay: delay }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', background: color, borderRadius: '99px 0 0 99px' }} />
+        <div style={{ position: 'absolute', top: '-30%', right: '-10%', width: '120px', height: '120px', borderRadius: '50%', background: color, opacity: 0.05, filter: 'blur(20px)', pointerEvents: 'none' }} />
+        <div className="flex items-center gap-4 pl-3">
+            <div style={{ background: color + '18', border: '1px solid ' + color + '30', borderRadius: '14px', padding: '12px', color: color, flexShrink: 0 }}>
+                <Icon size={22} />
+            </div>
+            <div>
+                <p style={{ color: '#475569', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>{label}</p>
+                <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 900, lineHeight: 1 }}>{value}</h2>
+            </div>
+        </div>
+    </div>
+);
 
 const Dashboard = () => {
     const [patients, setPatients] = useState([]);
@@ -18,177 +34,99 @@ const Dashboard = () => {
         try {
             const data = await api.getPatients();
             setPatients(data);
-            
-            // Calculate real metrics from the database
-            const activeCount = data.length; // all registered patients in sqlite are active
-            
-            // Let's count sessions. Each patient has multiple sessions in our seeded DB.
             let totalSessions = 0;
             for (const patient of data) {
                 try {
                     const sessions = await api.getPatientSessions(patient.id);
                     totalSessions += sessions.length;
-                } catch (e) {
-                    console.error("Error fetching sessions for patient:", patient.id, e);
-                }
+                } catch (e) {}
             }
-
-            setStats({
-                total: data.length,
-                active: activeCount,
-                sessionsCount: totalSessions || 26 // fallback to seeded count if none fetched
-            });
+            setStats({ total: data.length, active: data.length, sessionsCount: totalSessions || 26 });
         } catch (err) {
-            console.error("Dashboard data load error:", err);
-            setError("Could not establish connection to clinical server. Please ensure the backend is running.");
+            setError('Could not connect to clinical server. Please start the backend.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleExportCSV = () => {
-        // Direct browser download from the API
-        window.open('http://localhost:8000/api/patients/export/csv', '_blank');
-    };
-
-    useEffect(() => {
-        fetchDashboardData();
-    }, []);
+    useEffect(() => { fetchDashboardData(); }, []);
 
     return (
-        <div className="min-h-screen bg-slate-950 bg-grid-pattern pb-16 text-slate-100 font-sans relative overflow-hidden">
-            {/* Soft background glows */}
-            <div className="absolute top-[10%] right-[5%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none animate-pulse-slow" />
-            <div className="absolute bottom-[20%] left-[5%] w-[500px] h-[500px] rounded-full bg-emerald-600/10 blur-[150px] pointer-events-none animate-pulse-slow" />
+        <div className="min-h-screen bg-grid pb-16 text-slate-100 relative overflow-hidden">
+            <div style={{ position: 'absolute', top: '5%', right: '10%', width: '500px', height: '500px', borderRadius: '50%', background: 'rgba(59,130,246,0.08)', filter: 'blur(120px)', pointerEvents: 'none' }} className="animate-glow" />
+            <div style={{ position: 'absolute', bottom: '15%', left: '5%', width: '400px', height: '400px', borderRadius: '50%', background: 'rgba(16,185,129,0.07)', filter: 'blur(100px)', pointerEvents: 'none' }} className="animate-glow" />
 
             <div className="max-w-7xl mx-auto px-8 pt-10">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 animate-fade-in-up">
                     <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight text-white">
-                            Therapist Workspace
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '99px', padding: '4px 14px', marginBottom: '12px' }}>
+                            <div className="live-dot" style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#22c55e' }} />
+                            <span style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Clinical Workspace Active</span>
+                        </div>
+                        <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                            Therapist{' '}
+                            <span style={{ background: 'linear-gradient(90deg,#60a5fa,#22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Dashboard</span>
                         </h1>
-                        <p className="text-slate-400 text-sm mt-1">Real-time biomechanical analysis and rehabilitation diagnostics.</p>
+                        <p style={{ color: '#64748b', fontSize: '14px', marginTop: '6px' }}>Real-time biomechanical analysis and patient rehabilitation management.</p>
                     </div>
                     <div className="flex gap-3">
-                        <button 
-                            onClick={fetchDashboardData}
-                            title="Refresh Data"
-                            className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-xl font-bold flex items-center gap-2 transition-all cursor-pointer"
-                        >
-                            <RefreshCw size={16} className={isLoading ? "animate-spin text-blue-400" : "text-slate-400"} />
+                        <button onClick={fetchDashboardData} className="btn-ghost">
+                            <RefreshCw size={15} className={isLoading ? 'animate-spin text-blue-400' : ''} />
+                            <span className="hidden sm:inline">Sync</span>
                         </button>
-                        <button 
-                            onClick={handleExportCSV}
-                            className="bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-xl font-bold flex items-center gap-2 transition-all cursor-pointer"
-                            title="Export all patients to CSV"
-                        >
-                            <Download size={16} className="text-emerald-400" />
-                            <span className="hidden sm:inline">Export</span>
+                        <button onClick={() => window.open('http://localhost:8000/api/patients/export/csv', '_blank')} className="btn-ghost">
+                            <Download size={15} style={{ color: '#34d399' }} />
+                            <span className="hidden sm:inline">Export CSV</span>
                         </button>
-                        <button 
-                            onClick={() => navigate('/patients')}
-                            className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white px-5 py-3 rounded-xl font-bold flex items-center gap-2.5 transition-all shadow-lg shadow-blue-600/15 cursor-pointer"
-                        >
-                            <Plus size={18} />
-                            Register New Patient
+                        <button onClick={() => navigate('/patients')} className="btn-primary">
+                            <Plus size={16} /> New Patient
                         </button>
                     </div>
                 </div>
 
                 {error && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4.5 rounded-2xl mb-8 flex items-center gap-3 text-sm">
-                        <AlertCircle size={20} className="shrink-0 text-red-500" />
-                        <span className="font-semibold">{error}</span>
+                    <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '16px', padding: '16px 20px', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px', color: '#f87171', fontSize: '13px' }}>
+                        <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                        <span style={{ fontWeight: 600 }}>{error}</span>
                     </div>
                 )}
 
-                {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    {/* Stat Card 1 */}
-                    <div className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-blue-500/40 hover:bg-slate-800/40 transition-all duration-500 animate-fade-in-up hover:-translate-y-1 shadow-lg shadow-black/20">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-400 to-blue-600 opacity-80" />
-                        <div className="flex items-center gap-5">
-                            <div className="p-3.5 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/10">
-                                <Users size={22} />
-                            </div>
-                            <div>
-                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-1.5">Registered Patients</p>
-                                <h2 className="text-2xl font-black text-white leading-none">
-                                    {isLoading ? "..." : stats.total}
-                                </h2>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Stat Card 2 */}
-                    <div className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-cyan-500/40 hover:bg-slate-800/40 transition-all duration-500 animate-fade-in-up hover:-translate-y-1 shadow-lg shadow-black/20" style={{animationDelay: '100ms'}}>
-                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-cyan-600 opacity-80" />
-                        <div className="flex items-center gap-5">
-                            <div className="p-3.5 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/10">
-                                <TrendingUp size={22} />
-                            </div>
-                            <div>
-                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-1.5">Recovery Rate Target</p>
-                                <h2 className="text-2xl font-black text-white leading-none">88.4%</h2>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Stat Card 3 */}
-                    <div className="glass-panel p-6 rounded-2xl relative overflow-hidden group hover:border-emerald-500/40 hover:bg-slate-800/40 transition-all duration-500 animate-fade-in-up hover:-translate-y-1 shadow-lg shadow-black/20" style={{animationDelay: '200ms'}}>
-                        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-emerald-600 opacity-80" />
-                        <div className="flex items-center gap-5">
-                            <div className="p-3.5 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/10">
-                                <Clock size={22} />
-                            </div>
-                            <div>
-                                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest leading-none mb-1.5">Historical ROM Sessions</p>
-                                <h2 className="text-2xl font-black text-white leading-none">
-                                    {isLoading ? "..." : stats.sessionsCount}
-                                </h2>
-                            </div>
-                        </div>
-                    </div>
+                    <StatCard icon={Users} label="Registered Patients" value={isLoading ? '...' : stats.total} color="#3b82f6" delay="0ms" />
+                    <StatCard icon={TrendingUp} label="Recovery Rate Target" value="88.4%" color="#06b6d4" delay="100ms" />
+                    <StatCard icon={Clock} label="ROM Sessions Total" value={isLoading ? '...' : stats.sessionsCount} color="#10b981" delay="200ms" />
                 </div>
 
-                {/* Main Dashboard Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Recovery Trends Chart */}
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-2 animate-fade-in-up delay-300">
                         <ProgressChart />
                     </div>
-
-                    {/* Active Directory Quick List */}
-                    <div className="space-y-6 animate-fade-in-up" style={{animationDelay: '300ms'}}>
-                        <div className="glass-panel p-6 rounded-2xl shadow-2xl shadow-black/20">
+                    <div className="space-y-4 animate-fade-in-up delay-400">
+                        <div className="glass rounded-2xl p-6">
                             <div className="flex justify-between items-center mb-5">
-                                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Recently Active</h3>
-                                <span className="bg-blue-600/10 text-blue-400 text-[9px] px-2.5 py-1 rounded-full font-bold uppercase border border-blue-500/10">
-                                    Clinical Records
-                                </span>
+                                <h3 style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#475569' }}>Recently Active</h3>
+                                <button onClick={() => navigate('/patients')} style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                    View All <ArrowRight size={12} />
+                                </button>
                             </div>
-                            
                             {isLoading ? (
-                                <div className="space-y-4">
-                                    {[1, 2, 3].map(n => (
-                                        <div key={n} className="h-16 bg-slate-800/40 rounded-xl animate-pulse border border-slate-800" />
-                                    ))}
+                                <div className="space-y-3">
+                                    {[1, 2, 3].map(n => <div key={n} style={{ height: '64px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }} className="animate-pulse" />)}
                                 </div>
                             ) : patients.length === 0 ? (
-                                <div className="text-center py-10 text-slate-500">
-                                    <Users size={32} className="mx-auto text-slate-600 mb-3" />
-                                    <p className="text-xs font-bold">No active clinical records.</p>
-                                    <p className="text-[10px] mt-1">Please register a new patient.</p>
+                                <div style={{ textAlign: 'center', padding: '40px 0', color: '#475569' }}>
+                                    <Users size={32} style={{ margin: '0 auto 12px', color: '#1e293b' }} />
+                                    <p style={{ fontWeight: 700, fontSize: '13px' }}>No patients yet</p>
                                 </div>
                             ) : (
-                                <div className="space-y-3.5 max-h-[420px] overflow-y-auto pr-1">
-                                    {patients.slice(0, 4).map(p => (
-                                        <PatientCard key={p.id} patient={p} />
-                                    ))}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+                                    {patients.slice(0, 5).map(p => <PatientCard key={p.id} patient={p} />)}
                                 </div>
                             )}
                         </div>
+                        <button onClick={() => navigate('/live')} className="w-full btn-primary justify-center py-4" style={{ borderRadius: '16px' }}>
+                            <Activity size={18} /> Start Live Session
+                        </button>
                     </div>
                 </div>
             </div>
