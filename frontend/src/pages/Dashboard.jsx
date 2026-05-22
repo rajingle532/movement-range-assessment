@@ -1,29 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CountUp from 'react-countup';
 import PatientCard from '../components/PatientCard';
 import ProgressChart from '../components/ProgressChart';
 import { Plus, Users, TrendingUp, Clock, AlertCircle, RefreshCw, Download, Activity, ArrowRight } from 'lucide-react';
 import { api } from '../services/api';
 
-const StatCard = ({ icon: Icon, label, value, color, delay }) => (
-    <div className="stat-card animate-fade-in-up" style={{ animationDelay: delay }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '3px', height: '100%', background: color, borderRadius: '99px 0 0 99px' }} />
-        <div style={{ position: 'absolute', top: '-30%', right: '-10%', width: '120px', height: '120px', borderRadius: '50%', background: color, opacity: 0.05, filter: 'blur(20px)', pointerEvents: 'none' }} />
-        <div className="flex items-center gap-4 pl-3">
-            <div style={{ background: color + '18', border: '1px solid ' + color + '30', borderRadius: '14px', padding: '12px', color: color, flexShrink: 0 }}>
-                <Icon size={22} />
+const SparklineSVG = ({ color }) => (
+    <svg className="w-16 h-8 overflow-visible opacity-50 group-hover:opacity-100 transition-opacity" viewBox="0 0 100 40">
+        <path d="M0,35 Q10,35 20,25 T40,15 T60,20 T80,5 T100,10" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
+        <circle cx="100" cy="10" r="3" fill={color} className="animate-pulse" />
+    </svg>
+);
+
+const StatCard = ({ icon: Icon, label, value, color, suffix = '', gradient, delay }) => (
+    <div className={`stat-card-biopunk group animate-fade-in-up stagger-${delay}`}>
+        {/* Unique Background Gradient */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ background: gradient }} />
+        
+        <div className="flex justify-between items-start z-10">
+            <div className="flex items-center gap-3">
+                <div style={{ color: color }} className="p-2.5 rounded-xl bg-black/40 border border-white/5 shadow-inner">
+                    <Icon size={22} />
+                </div>
+                <div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">{label}</p>
+                    <h2 className="font-mono-data text-white text-3xl font-black tracking-tight flex items-baseline gap-1">
+                        <CountUp end={value} duration={2.5} separator="," decimals={suffix === '%' ? 1 : 0} />
+                        {suffix && <span className="text-lg text-slate-500">{suffix}</span>}
+                    </h2>
+                </div>
             </div>
-            <div>
-                <p style={{ color: '#475569', fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>{label}</p>
-                <h2 style={{ color: '#fff', fontSize: '28px', fontWeight: 900, lineHeight: 1 }}>{value}</h2>
-            </div>
+            <SparklineSVG color={color} />
         </div>
     </div>
 );
 
 const Dashboard = () => {
     const [patients, setPatients] = useState([]);
-    const [stats, setStats] = useState({ total: 0, active: 0, sessionsCount: 0 });
+    const [stats, setStats] = useState({ total: 0, active: 0, sessionsCount: 0, target: 88.4 });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -41,7 +56,7 @@ const Dashboard = () => {
                     totalSessions += sessions.length;
                 } catch (e) {}
             }
-            setStats({ total: data.length, active: data.length, sessionsCount: totalSessions || 26 });
+            setStats({ total: data.length, active: data.length, sessionsCount: totalSessions || 26, target: 88.4 });
         } catch (err) {
             setError('Could not connect to clinical server. Please start the backend.');
         } finally {
@@ -52,81 +67,117 @@ const Dashboard = () => {
     useEffect(() => { fetchDashboardData(); }, []);
 
     return (
-        <div className="min-h-screen bg-grid pb-16 text-slate-100 relative overflow-hidden">
-            <div style={{ position: 'absolute', top: '5%', right: '10%', width: '500px', height: '500px', borderRadius: '50%', background: 'rgba(59,130,246,0.08)', filter: 'blur(120px)', pointerEvents: 'none' }} className="animate-glow" />
-            <div style={{ position: 'absolute', bottom: '15%', left: '5%', width: '400px', height: '400px', borderRadius: '50%', background: 'rgba(16,185,129,0.07)', filter: 'blur(100px)', pointerEvents: 'none' }} className="animate-glow" />
+        <div className="min-h-screen bg-grid-biopunk pb-16 text-slate-100 relative overflow-hidden">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#00e5ff] rounded-full blur-[150px] opacity-[0.03] pointer-events-none animate-glow" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#39ff14] rounded-full blur-[150px] opacity-[0.03] pointer-events-none animate-glow" style={{ animationDelay: '2s' }} />
 
-            <div className="max-w-7xl mx-auto px-8 pt-10">
+            <div className="max-w-[1400px] mx-auto px-6 pt-10">
+                {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 animate-fade-in-up">
                     <div>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '99px', padding: '4px 14px', marginBottom: '12px' }}>
-                            <div className="live-dot" style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#22c55e' }} />
-                            <span style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Clinical Workspace Active</span>
+                        <div className="inline-flex items-center gap-2 bg-[#00e5ff]/10 border border-[#00e5ff]/20 rounded-full px-3 py-1.5 mb-3 shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#00e5ff] animate-glow" />
+                            <span className="text-[#00e5ff] text-[10px] font-bold uppercase tracking-widest">Clinical Workspace Active</span>
                         </div>
-                        <h1 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                            Therapist{' '}
-                            <span style={{ background: 'linear-gradient(90deg,#60a5fa,#22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Dashboard</span>
+                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                            Therapist <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00e5ff] to-[#39ff14]">Dashboard</span>
                         </h1>
-                        <p style={{ color: '#64748b', fontSize: '14px', marginTop: '6px' }}>Real-time biomechanical analysis and patient rehabilitation management.</p>
+                        <p className="text-slate-400 text-sm mt-2 font-medium tracking-wide">Real-time biomechanical analysis and patient rehabilitation management.</p>
                     </div>
+                    
                     <div className="flex gap-3">
-                        <button onClick={fetchDashboardData} className="btn-ghost">
-                            <RefreshCw size={15} className={isLoading ? 'animate-spin text-blue-400' : ''} />
+                        <button onClick={fetchDashboardData} className="btn-biopunk">
+                            <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
                             <span className="hidden sm:inline">Sync</span>
                         </button>
-                        <button onClick={() => window.open('http://localhost:8000/api/patients/export/csv', '_blank')} className="btn-ghost">
-                            <Download size={15} style={{ color: '#34d399' }} />
-                            <span className="hidden sm:inline">Export CSV</span>
-                        </button>
-                        <button onClick={() => navigate('/patients')} className="btn-primary">
-                            <Plus size={16} /> New Patient
+                        <button onClick={() => window.open('http://localhost:8000/api/patients/export/csv', '_blank')} className="btn-biopunk !border-[#39ff14]/30 !text-[#39ff14] hover:!bg-[#39ff14]/10">
+                            <Download size={15} />
+                            <span className="hidden sm:inline">Export</span>
                         </button>
                     </div>
                 </div>
 
                 {error && (
-                    <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '16px', padding: '16px 20px', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px', color: '#f87171', fontSize: '13px' }}>
-                        <AlertCircle size={18} style={{ flexShrink: 0 }} />
-                        <span style={{ fontWeight: 600 }}>{error}</span>
+                    <div className="bg-[#ffb300]/10 border border-[#ffb300]/30 rounded-xl p-4 mb-8 flex items-center gap-3 text-[#ffb300] text-sm font-bold shadow-[0_0_15px_rgba(255,179,0,0.1)] animate-fade-in">
+                        <AlertCircle size={20} className="shrink-0 animate-pulse" />
+                        <span>{error}</span>
                     </div>
                 )}
 
+                {/* Top 3 Stat Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <StatCard icon={Users} label="Registered Patients" value={isLoading ? '...' : stats.total} color="#3b82f6" delay="0ms" />
-                    <StatCard icon={TrendingUp} label="Recovery Rate Target" value="88.4%" color="#06b6d4" delay="100ms" />
-                    <StatCard icon={Clock} label="ROM Sessions Total" value={isLoading ? '...' : stats.sessionsCount} color="#10b981" delay="200ms" />
+                    <StatCard 
+                        icon={Users} 
+                        label="Registered Patients" 
+                        value={isLoading ? 0 : stats.total} 
+                        color="#00e5ff" 
+                        gradient="radial-gradient(circle at 100% 100%, rgba(0,229,255,0.8), transparent 60%)"
+                        delay="1" 
+                    />
+                    <StatCard 
+                        icon={TrendingUp} 
+                        label="Recovery Rate Target" 
+                        value={isLoading ? 0 : stats.target} 
+                        suffix="%"
+                        color="#39ff14" 
+                        gradient="radial-gradient(circle at 100% 100%, rgba(57,255,20,0.8), transparent 60%)"
+                        delay="2" 
+                    />
+                    <StatCard 
+                        icon={Clock} 
+                        label="ROM Sessions Total" 
+                        value={isLoading ? 0 : stats.sessionsCount} 
+                        color="#ffb300" 
+                        gradient="radial-gradient(circle at 100% 100%, rgba(255,179,0,0.8), transparent 60%)"
+                        delay="3" 
+                    />
                 </div>
 
+                {/* Main Content Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 animate-fade-in-up delay-300">
+                    
+                    {/* Left Panel: Chart */}
+                    <div className="lg:col-span-2 animate-fade-in-up stagger-4">
                         <ProgressChart />
                     </div>
-                    <div className="space-y-4 animate-fade-in-up delay-400">
-                        <div className="glass rounded-2xl p-6">
+
+                    {/* Right Panel: Active Patients & Start Session */}
+                    <div className="space-y-6 flex flex-col h-full animate-fade-in-up stagger-5">
+                        
+                        {/* Start Live Session Button */}
+                        <button 
+                            onClick={() => navigate('/live')} 
+                            className="btn-pulse w-full py-4 rounded-xl flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-sm transition-all transform hover:-translate-y-1"
+                        >
+                            <Activity size={20} className="animate-pulse" /> Start Live Session
+                        </button>
+
+                        {/* Patients List */}
+                        <div className="glass-biopunk rounded-2xl p-5 flex-grow flex flex-col">
                             <div className="flex justify-between items-center mb-5">
-                                <h3 style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#475569' }}>Recently Active</h3>
-                                <button onClick={() => navigate('/patients')} style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', background: 'none', border: 'none' }}>
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Recently Active</h3>
+                                <button onClick={() => navigate('/patients')} className="text-[#00e5ff] text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 hover:text-white transition-colors">
                                     View All <ArrowRight size={12} />
                                 </button>
                             </div>
+
                             {isLoading ? (
                                 <div className="space-y-3">
-                                    {[1, 2, 3].map(n => <div key={n} style={{ height: '64px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }} className="animate-pulse" />)}
+                                    {[1, 2, 3].map(n => <div key={n} className="h-20 bg-white/5 rounded-xl animate-pulse" />)}
                                 </div>
                             ) : patients.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '40px 0', color: '#475569' }}>
-                                    <Users size={32} style={{ margin: '0 auto 12px', color: '#1e293b' }} />
-                                    <p style={{ fontWeight: 700, fontSize: '13px' }}>No patients yet</p>
+                                <div className="text-center py-12 text-slate-500 border border-dashed border-[#00e5ff]/20 rounded-xl m-auto w-full">
+                                    <Users size={32} className="mx-auto mb-3 opacity-50" />
+                                    <p className="font-bold text-xs uppercase tracking-widest">No patients yet</p>
                                 </div>
                             ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
-                                    {patients.slice(0, 5).map(p => <PatientCard key={p.id} patient={p} />)}
+                                <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-grow max-h-[300px]">
+                                    {patients.slice(0, 5).map((p, i) => <PatientCard key={p.id} patient={p} index={i} />)}
                                 </div>
                             )}
                         </div>
-                        <button onClick={() => navigate('/live')} className="w-full btn-primary justify-center py-4" style={{ borderRadius: '16px' }}>
-                            <Activity size={18} /> Start Live Session
-                        </button>
+
                     </div>
                 </div>
             </div>

@@ -1,31 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { api } from '../services/api';
-import { TrendingUp, Activity, User } from 'lucide-react';
+import { TrendingUp, Activity, User, Filter } from 'lucide-react';
 
 const ProgressChart = () => {
     const [patients, setPatients] = useState([]);
     const [selectedPatientId, setSelectedPatientId] = useState('');
     const [chartData, setChartData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [activeJoint, setActiveJoint] = useState('all'); // 'all', 'elbow', 'knee', 'shoulder'
 
-    // Initial load: Fetch all patients to populate selector
+    // Initial load
     useEffect(() => {
         const loadPatients = async () => {
             try {
                 const data = await api.getPatients();
                 setPatients(data);
-                if (data.length > 0) {
-                    setSelectedPatientId(data[0].id);
-                }
+                if (data.length > 0) setSelectedPatientId(data[0].id);
             } catch (err) {
-                console.error("Error loading patients for chart:", err);
+                console.error("Error loading patients:", err);
             }
         };
         loadPatients();
     }, []);
 
-    // Load sessions whenever the selected patient changes
+    // Load sessions
     useEffect(() => {
         if (!selectedPatientId) return;
 
@@ -33,11 +32,8 @@ const ProgressChart = () => {
             setIsLoading(true);
             try {
                 const sessions = await api.getPatientSessions(selectedPatientId);
-                
-                // Sort sessions chronological by date
                 const sortedSessions = sessions.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-                // Format sessions data for Recharts
                 const formattedData = sortedSessions.map((session, sIdx) => {
                     const dataPoint = {
                         name: `Sess ${sIdx + 1}`,
@@ -45,6 +41,7 @@ const ProgressChart = () => {
                         elbow: 0,
                         knee: 0,
                         shoulder: 0,
+                        isMilestone: (sIdx + 1) % 5 === 0 // every 5th session is a milestone
                     };
 
                     session.measurements.forEach(m => {
@@ -58,135 +55,180 @@ const ProgressChart = () => {
 
                 setChartData(formattedData);
             } catch (err) {
-                console.error("Error loading sessions for progress chart:", err);
+                console.error("Error loading sessions:", err);
             } finally {
                 setIsLoading(false);
             }
         };
-
         loadSessions();
     }, [selectedPatientId]);
 
+    const milestones = chartData.filter(d => d.isMilestone);
+
     return (
-        <div className="bg-slate-900/60 backdrop-blur border border-slate-800 p-6 rounded-2xl shadow-xl shadow-black/10 h-[420px] flex flex-col justify-between hover:border-slate-800 transition-all">
+        <div className="glass-biopunk p-6 rounded-2xl h-[420px] flex flex-col justify-between">
             {/* Header controls */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/10">
-                        <TrendingUp size={16} />
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#00e5ff]/10 text-[#00e5ff] rounded-lg border border-[#00e5ff]/20">
+                        <TrendingUp size={20} />
                     </div>
                     <div>
-                        <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none">ROM Recovery Curves</h3>
-                        <p className="text-[10px] text-slate-500 font-bold mt-1">Joint mobility metrics over multiple sessions</p>
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-white leading-none">ROM Recovery Curves</h3>
+                        <p className="text-[10px] text-slate-400 font-bold mt-1">Joint mobility metrics over multiple sessions</p>
                     </div>
                 </div>
 
-                {/* Patient Selector */}
-                {patients.length > 0 && (
-                    <div className="relative flex items-center gap-2 self-stretch sm:self-auto">
-                        <User size={12} className="absolute left-3 text-slate-500 pointer-events-none" />
-                        <select
-                            value={selectedPatientId}
-                            onChange={(e) => setSelectedPatientId(e.target.value)}
-                            className="pl-7 pr-8 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 font-bold cursor-pointer appearance-none w-full sm:w-auto"
-                        >
-                            {patients.map(p => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name}
-                                </option>
-                            ))}
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 text-[10px]">▼</div>
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    {/* Toggles */}
+                    <div className="hidden sm:flex items-center gap-1 bg-[#0b1426]/80 p-1 rounded-xl border border-[#00e5ff]/20">
+                        {['all', 'elbow', 'knee', 'shoulder'].map(j => (
+                            <button 
+                                key={j}
+                                onClick={() => setActiveJoint(j)}
+                                className={`px-3 py-1 text-[10px] uppercase font-bold tracking-widest rounded-lg transition-all ${
+                                    activeJoint === j 
+                                    ? 'bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/30' 
+                                    : 'text-slate-500 hover:text-slate-300'
+                                }`}
+                            >
+                                {j}
+                            </button>
+                        ))}
                     </div>
-                )}
+
+                    {/* Patient Selector */}
+                    {patients.length > 0 && (
+                        <div className="relative flex items-center gap-2 flex-grow md:flex-grow-0">
+                            <User size={12} className="absolute left-3 text-[#00e5ff] pointer-events-none" />
+                            <select
+                                value={selectedPatientId}
+                                onChange={(e) => setSelectedPatientId(e.target.value)}
+                                className="pl-8 pr-8 py-2 bg-[#0b1426]/80 border border-[#00e5ff]/20 rounded-xl text-xs text-white focus:outline-none focus:border-[#00e5ff] font-bold cursor-pointer appearance-none w-full"
+                            >
+                                {patients.map(p => (
+                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#00e5ff] text-[10px]">▼</div>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Recharts Component */}
+            {/* Recharts Area Chart */}
             <div className="h-[280px] w-full mt-2 relative">
                 {isLoading ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-950/20 rounded-2xl backdrop-blur-xs">
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Loading Biometrics...</p>
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#070d1a]/50 rounded-2xl backdrop-blur-sm z-10">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-8 h-8 border-2 border-[#00e5ff]/30 border-t-[#00e5ff] rounded-full animate-spin" />
+                            <p className="text-[10px] text-[#00e5ff] font-bold uppercase tracking-widest animate-pulse">Loading Biometrics...</p>
                         </div>
                     </div>
                 ) : chartData.length === 0 ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
-                        <Activity size={28} className="text-slate-700 mb-2 animate-pulse" />
-                        <p className="text-xs font-bold text-slate-400">No session readings.</p>
-                        <p className="text-[9px] text-slate-500 font-medium">Conduct a live joint assessment session first.</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center border border-dashed border-[#00e5ff]/20 rounded-2xl">
+                        <Activity size={28} className="text-[#00e5ff]/50 mb-2 animate-pulse" />
+                        <p className="text-xs font-bold text-slate-400">No session readings found.</p>
                     </div>
                 ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData} margin={{ left: -15, right: 10, top: 10 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                    <ResponsiveContainer width="100%" height="100%" className="animate-fade-in">
+                        <AreaChart data={chartData} margin={{ left: -15, right: 10, top: 20 }}>
+                            <defs>
+                                <linearGradient id="colorElbow" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#00e5ff" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#00e5ff" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="colorKnee" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#39ff14" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#39ff14" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="colorShoulder" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#ffb300" stopOpacity={0.3}/>
+                                    <stop offset="95%" stopColor="#ffb300" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 229, 255, 0.1)" vertical={false} />
+                            
                             <XAxis 
                                 dataKey="name" 
                                 stroke="#475569" 
-                                fontSize={10} 
-                                fontWeight="bold"
                                 tickLine={false} 
                                 axisLine={false} 
                                 dy={10}
                             />
+                            
                             <YAxis 
                                 stroke="#475569" 
-                                fontSize={10} 
-                                fontWeight="bold"
                                 tickLine={false} 
                                 axisLine={false} 
                                 unit="°"
                                 domain={[0, 180]}
                             />
+                            
                             <Tooltip 
                                 contentStyle={{ 
-                                    backgroundColor: '#0F172A', 
-                                    border: '1px solid #1E293B', 
+                                    backgroundColor: '#070d1a', 
+                                    border: '1px solid rgba(0, 229, 255, 0.3)', 
                                     borderRadius: '12px', 
-                                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)',
-                                    color: '#fff' 
+                                    boxShadow: '0 0 20px rgba(0,229,255,0.15)',
+                                    color: '#fff',
+                                    fontFamily: 'DM Mono'
                                 }}
-                                itemStyle={{ fontWeight: 'bold', fontSize: '11px' }}
-                                labelStyle={{ fontSize: '10px', color: '#64748B', fontWeight: 'bold' }}
+                                itemStyle={{ fontWeight: 'bold', fontSize: '12px' }}
+                                labelStyle={{ fontSize: '10px', color: '#00e5ff', fontWeight: 'bold', textTransform: 'uppercase' }}
                             />
-                            <Legend 
-                                verticalAlign="top" 
-                                height={36} 
-                                iconType="circle"
-                                iconSize={8}
-                                wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }}
-                            />
-                            {/* Elbow Curve */}
-                            <Line 
-                                type="monotone" 
-                                dataKey="elbow" 
-                                name="Elbow Flexion"
-                                stroke="#2563EB" 
-                                strokeWidth={3.5}
-                                dot={{ r: 4, fill: '#2563EB', strokeWidth: 1.5, stroke: '#0F172A' }}
-                                activeDot={{ r: 6, strokeWidth: 0 }}
-                            />
-                            {/* Knee Curve */}
-                            <Line 
-                                type="monotone" 
-                                dataKey="knee" 
-                                name="Knee Flexion"
-                                stroke="#10B981" 
-                                strokeWidth={3.5}
-                                dot={{ r: 4, fill: '#10B981', strokeWidth: 1.5, stroke: '#0F172A' }}
-                                activeDot={{ r: 6, strokeWidth: 0 }}
-                            />
-                            {/* Shoulder Curve */}
-                            <Line 
-                                type="monotone" 
-                                dataKey="shoulder" 
-                                name="Shoulder Abduction"
-                                stroke="#06B6D4" 
-                                strokeWidth={3.5}
-                                dot={{ r: 4, fill: '#06B6D4', strokeWidth: 1.5, stroke: '#0F172A' }}
-                                activeDot={{ r: 6, strokeWidth: 0 }}
-                            />
-                        </LineChart>
+
+                            {/* Milestone Markers */}
+                            {milestones.map((m, i) => (
+                                <ReferenceLine key={i} x={m.name} stroke="rgba(255,179,0,0.5)" strokeDasharray="3 3" label={{ position: 'top', value: 'Milestone', fill: '#ffb300', fontSize: 9, fontWeight: 'bold' }} />
+                            ))}
+
+                            {(activeJoint === 'all' || activeJoint === 'elbow') && (
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="elbow" 
+                                    name="Elbow Flexion"
+                                    stroke="#00e5ff" 
+                                    strokeWidth={3}
+                                    fillOpacity={1} 
+                                    fill="url(#colorElbow)"
+                                    animationDuration={1500}
+                                    dot={{ r: 4, fill: '#070d1a', strokeWidth: 2, stroke: '#00e5ff' }}
+                                    activeDot={{ r: 6, fill: '#00e5ff', strokeWidth: 0, className: 'animate-glow' }}
+                                />
+                            )}
+                            
+                            {(activeJoint === 'all' || activeJoint === 'knee') && (
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="knee" 
+                                    name="Knee Flexion"
+                                    stroke="#39ff14" 
+                                    strokeWidth={3}
+                                    fillOpacity={1} 
+                                    fill="url(#colorKnee)"
+                                    animationDuration={1500}
+                                    dot={{ r: 4, fill: '#070d1a', strokeWidth: 2, stroke: '#39ff14' }}
+                                    activeDot={{ r: 6, fill: '#39ff14', strokeWidth: 0, className: 'animate-glow' }}
+                                />
+                            )}
+                            
+                            {(activeJoint === 'all' || activeJoint === 'shoulder') && (
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="shoulder" 
+                                    name="Shoulder Abduction"
+                                    stroke="#ffb300" 
+                                    strokeWidth={3}
+                                    fillOpacity={1} 
+                                    fill="url(#colorShoulder)"
+                                    animationDuration={1500}
+                                    dot={{ r: 4, fill: '#070d1a', strokeWidth: 2, stroke: '#ffb300' }}
+                                    activeDot={{ r: 6, fill: '#ffb300', strokeWidth: 0, className: 'animate-glow' }}
+                                />
+                            )}
+                        </AreaChart>
                     </ResponsiveContainer>
                 )}
             </div>
