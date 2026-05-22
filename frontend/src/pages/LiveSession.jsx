@@ -104,16 +104,16 @@ const LiveSession = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 p-6 text-slate-100 font-sans relative overflow-hidden">
+        <div className="min-h-screen bg-slate-950 bg-grid-pattern p-6 text-slate-100 font-sans relative overflow-hidden">
             {/* Background glows */}
-            <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 blur-[130px] pointer-events-none" />
-            <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/5 blur-[130px] pointer-events-none" />
+            <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[130px] pointer-events-none animate-pulse-slow" />
+            <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[130px] pointer-events-none animate-pulse-slow" />
             
             <canvas ref={canvasRef} className="hidden" />
             
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto animate-fade-in-up">
                 {/* Status Bar */}
-                <div className="bg-slate-900/60 backdrop-blur border border-slate-800 p-4.5 rounded-2xl shadow-xl mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="glass-panel p-4.5 rounded-2xl shadow-xl shadow-black/20 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="flex flex-wrap items-center gap-4">
                         {/* WebSocket Status */}
                         <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-black text-[9px] tracking-wider uppercase border transition-all ${
@@ -198,7 +198,7 @@ const LiveSession = () => {
                         <AngleGauge angle={angles.elbow} label="Elbow Flexion" status={status.elbow} />
                         <AngleGauge angle={angles.knee} label="Knee Flexion" status={status.knee} />
                         
-                        <div className="bg-slate-900/60 backdrop-blur border border-slate-800 p-6 rounded-2xl shadow-xl shadow-black/10 border-l-4 border-l-blue-500">
+                        <div className="glass-panel p-6 rounded-2xl shadow-xl shadow-black/20 border-l-4 border-l-blue-500 hover:border-l-cyan-400 transition-colors duration-500">
                             <h3 className="font-black text-slate-400 uppercase text-[10px] tracking-widest mb-3 flex items-center gap-1.5">
                                 <HelpCircle size={12} className="text-blue-400" />
                                 Clinical Guidance
