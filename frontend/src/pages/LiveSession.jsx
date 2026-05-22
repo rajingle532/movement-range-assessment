@@ -22,10 +22,19 @@ const LiveSession = () => {
     const [saveSuccess, setSaveSuccess] = useState('');
     const [saveError, setSaveError] = useState('');
 
+    // ✅ FIX: Stop camera on mount-cleanup AND on every page navigation
     useEffect(() => {
         startVideo();
-        return () => stopVideo();
-    }, [startVideo, stopVideo]);
+        return () => {
+            // Force kill ALL media tracks so camera light turns off
+            stopVideo();
+            if (navigator.mediaDevices) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => stream.getTracks().forEach(track => track.stop()))
+                    .catch(() => {}); // ignore if no stream
+            }
+        };
+    }, []); // empty deps — run only on mount/unmount
 
     // Active session duration timer
     useEffect(() => {
@@ -104,109 +113,100 @@ const LiveSession = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 bg-grid-pattern p-6 text-slate-100 font-sans relative overflow-hidden">
-            {/* Background glows */}
-            <div className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[130px] pointer-events-none animate-pulse-slow" />
-            <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[130px] pointer-events-none animate-pulse-slow" />
-            
+        <div className="min-h-screen bg-grid pb-8 text-slate-100 relative overflow-hidden">
+            {/* Glows */}
+            <div style={{ position:'absolute', top:'10%', right:'-5%', width:'450px', height:'450px', borderRadius:'50%', background:'rgba(59,130,246,0.08)', filter:'blur(120px)', pointerEvents:'none' }} className="animate-glow" />
+            <div style={{ position:'absolute', bottom:'10%', left:'-5%', width:'400px', height:'400px', borderRadius:'50%', background:'rgba(6,182,212,0.07)', filter:'blur(100px)', pointerEvents:'none' }} className="animate-glow" />
+
             <canvas ref={canvasRef} className="hidden" />
-            
-            <div className="max-w-7xl mx-auto animate-fade-in-up">
-                {/* Status Bar */}
-                <div className="glass-panel p-4.5 rounded-2xl shadow-xl shadow-black/20 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex flex-wrap items-center gap-4">
-                        {/* WebSocket Status */}
-                        <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-black text-[9px] tracking-wider uppercase border transition-all ${
-                            isConnected 
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/5' 
-                            : 'bg-red-500/10 text-red-400 border-red-500/20'
-                        }`}>
-                            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-ping' : 'bg-red-500'}`} />
-                            AI Stream: {isConnected ? 'Online' : 'Offline'}
+
+            <div className="max-w-7xl mx-auto px-6 pt-6 animate-fade-in-up">
+
+                {/* ── Top Status Bar ── */}
+                <div className="glass rounded-2xl px-5 py-3.5 mb-6 flex flex-wrap justify-between items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        {/* Live Badge */}
+                        <div style={{ display:'flex', alignItems:'center', gap:'8px', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:'99px', padding:'5px 12px' }}>
+                            <div className="live-dot" style={{ width:'7px', height:'7px', borderRadius:'50%', background:'#ef4444' }} />
+                            <span style={{ color:'#f87171', fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em' }}>Live</span>
+                        </div>
+
+                        {/* AI Status */}
+                        <div style={{ display:'flex', alignItems:'center', gap:'7px', background: isConnected ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border:`1px solid ${isConnected ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`, borderRadius:'99px', padding:'5px 12px' }}>
+                            <div style={{ width:'6px', height:'6px', borderRadius:'50%', background: isConnected ? '#22c55e' : '#ef4444' }} />
+                            <span style={{ color: isConnected ? '#4ade80' : '#f87171', fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em' }}>AI: {isConnected ? 'Online' : 'Offline'}</span>
                         </div>
 
                         {/* Camera Status */}
-                        <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-black text-[9px] tracking-wider uppercase border transition-all ${
-                            isCameraReady 
-                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' 
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        }`}>
-                            {isCameraReady ? <CheckCircle size={11} /> : <Activity size={11} className="animate-spin text-amber-400" />}
-                            Hdw Camera: {isCameraReady ? 'Connected' : 'Acquiring...'}
+                        <div style={{ display:'flex', alignItems:'center', gap:'7px', background: isCameraReady ? 'rgba(59,130,246,0.08)' : 'rgba(245,158,11,0.08)', border:`1px solid ${isCameraReady ? 'rgba(59,130,246,0.2)' : 'rgba(245,158,11,0.2)'}`, borderRadius:'99px', padding:'5px 12px' }}>
+                            <div style={{ width:'6px', height:'6px', borderRadius:'50%', background: isCameraReady ? '#3b82f6' : '#f59e0b' }} />
+                            <span style={{ color: isCameraReady ? '#60a5fa' : '#fbbf24', fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em' }}>Cam: {isCameraReady ? 'Ready' : 'Init...'}</span>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-5">
-                        <div className="text-slate-400 text-xs font-black uppercase tracking-wider flex items-center gap-2 bg-slate-950/60 border border-slate-800 px-4 py-2 rounded-xl">
-                            <Timer size={14} className="text-blue-400 animate-pulse" /> 
-                            Session: <span className="text-white font-mono">{formatTime(seconds)}</span>
+                    <div className="flex items-center gap-3">
+                        {/* Timer */}
+                        <div style={{ display:'flex', alignItems:'center', gap:'8px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'12px', padding:'8px 16px' }}>
+                            <Timer size={14} style={{ color:'#60a5fa' }} />
+                            <span style={{ color:'#fff', fontWeight:900, fontFamily:'monospace', fontSize:'14px', letterSpacing:'0.05em' }}>{formatTime(seconds)}</span>
                         </div>
-                        <button 
-                            onClick={handleSaveSession}
-                            disabled={isSaving || !isConnected}
-                            className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white px-5.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md shadow-blue-600/10 disabled:opacity-50 cursor-pointer"
-                        >
-                            {isSaving ? "Archiving..." : "Archive Results"}
+                        {/* Archive */}
+                        <button onClick={handleSaveSession} disabled={isSaving || !isConnected} className="btn-primary" style={{ padding:'9px 18px', fontSize:'11px' }}>
+                            <Save size={14} />
+                            {isSaving ? 'Saving...' : 'Archive'}
                         </button>
-                        <button 
-                            onClick={() => {
-                                stopVideo();
-                                navigate('/dashboard');
-                            }}
-                            className="bg-slate-900 border border-slate-800 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 text-slate-400 px-5.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer"
-                        >
+                        {/* End Session */}
+                        <button onClick={() => { stopVideo(); navigate('/'); }} className="btn-danger" style={{ padding:'9px 18px', fontSize:'11px' }}>
                             End Session
                         </button>
                     </div>
                 </div>
 
+                {/* ── Alerts ── */}
                 {cameraError && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4.5 rounded-xl mb-6 flex items-center gap-3 text-xs font-semibold">
-                        <AlertCircle size={18} className="text-red-500 shrink-0" />
-                        <span>{cameraError}</span>
+                    <div style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:'14px', padding:'14px 18px', marginBottom:'20px', display:'flex', alignItems:'center', gap:'12px', color:'#f87171', fontSize:'13px' }}>
+                        <AlertCircle size={16} style={{ flexShrink:0 }} /> {cameraError}
                     </div>
                 )}
-
                 {saveError && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4.5 rounded-xl mb-6 flex items-center gap-3 text-xs font-semibold">
-                        <AlertCircle size={18} className="text-red-500 shrink-0" />
-                        <span>{saveError}</span>
+                    <div style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', borderRadius:'14px', padding:'14px 18px', marginBottom:'20px', display:'flex', alignItems:'center', gap:'12px', color:'#f87171', fontSize:'13px' }}>
+                        <AlertCircle size={16} style={{ flexShrink:0 }} /> {saveError}
                     </div>
                 )}
-
                 {saveSuccess && (
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4.5 rounded-xl mb-6 flex items-center gap-3 text-xs font-semibold">
-                        <CheckCircle size={18} className="text-emerald-400 shrink-0" />
-                        <span>{saveSuccess}</span>
+                    <div style={{ background:'rgba(34,197,94,0.08)', border:'1px solid rgba(34,197,94,0.2)', borderRadius:'14px', padding:'14px 18px', marginBottom:'20px', display:'flex', alignItems:'center', gap:'12px', color:'#4ade80', fontSize:'13px' }}>
+                        <CheckCircle size={16} style={{ flexShrink:0 }} /> {saveSuccess}
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Camera Feed Area */}
-                    <div className="lg:col-span-2 space-y-6">
+                {/* ── Main Grid ── */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Camera + Joint Table */}
+                    <div className="lg:col-span-2 space-y-5">
                         <SkeletonViewer videoRef={videoRef} isConnected={isConnected} annotatedFrame={annotatedFrame} />
-                        
                         <JointTable joints={[
-                            { name: 'Elbow Joint Flexion', angle: Math.round(angles.elbow), status: status.elbow || 'Normal' },
-                            { name: 'Knee Joint Flexion', angle: Math.round(angles.knee), status: status.knee || 'Normal' },
-                            { name: 'Shoulder Joint Abduction', angle: Math.round(angles.shoulder), status: status.shoulder || 'Normal' },
+                            { name: 'Elbow Flexion', angle: Math.round(angles.elbow), status: status.elbow || 'Normal' },
+                            { name: 'Knee Flexion', angle: Math.round(angles.knee), status: status.knee || 'Normal' },
+                            { name: 'Shoulder Abduction', angle: Math.round(angles.shoulder), status: status.shoulder || 'Normal' },
                         ]} />
                     </div>
 
-                    {/* Right Analytics Sidebar */}
-                    <div className="space-y-6">
+                    {/* Sidebar: Gauges + Guidance */}
+                    <div className="space-y-5">
                         <AngleGauge angle={angles.elbow} label="Elbow Flexion" status={status.elbow} />
                         <AngleGauge angle={angles.knee} label="Knee Flexion" status={status.knee} />
-                        
-                        <div className="glass-panel p-6 rounded-2xl shadow-xl shadow-black/20 border-l-4 border-l-blue-500 hover:border-l-cyan-400 transition-colors duration-500">
-                            <h3 className="font-black text-slate-400 uppercase text-[10px] tracking-widest mb-3 flex items-center gap-1.5">
-                                <HelpCircle size={12} className="text-blue-400" />
-                                Clinical Guidance
-                            </h3>
-                            <p className="text-slate-400 text-xs leading-relaxed font-semibold">
-                                {!isCameraReady ? "Waiting for webcam feed to initialize..." : 
-                                 !isConnected ? "Verifying stream connection to the computer vision backend..." : 
-                                 "Biomechanics pipeline active. Stand 2-3 meters away. Ensure elbow, knee, and shoulder joints are completely visible to calibrate angles."}
+                        <AngleGauge angle={angles.shoulder} label="Shoulder" status={status.shoulder} />
+
+                        {/* Guidance Card */}
+                        <div className="glass rounded-2xl p-5" style={{ borderLeft:'3px solid rgba(59,130,246,0.5)' }}>
+                            <p style={{ color:'#475569', fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'10px', display:'flex', alignItems:'center', gap:'6px' }}>
+                                <HelpCircle size={12} style={{ color:'#60a5fa' }} /> Clinical Guidance
+                            </p>
+                            <p style={{ color:'#64748b', fontSize:'12px', lineHeight:1.6, fontWeight:600 }}>
+                                {!isCameraReady ? '⏳ Initializing webcam feed...'
+                                    : !isConnected ? '🔄 Connecting to AI backend...'
+                                    : '✅ Pipeline active. Stand 2–3 m from camera. Keep elbow, knee & shoulder visible for accurate ROM measurement.'}
                             </p>
                         </div>
                     </div>
@@ -217,3 +217,4 @@ const LiveSession = () => {
 };
 
 export default LiveSession;
+
