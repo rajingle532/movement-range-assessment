@@ -19,10 +19,10 @@
     margin: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-family: 'Syne', 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
-  h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; }
-  .font-mono-data { font-family: 'DM Mono', monospace; font-variant-numeric: tabular-nums; }
+  h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
+  .font-mono-data { font-family: 'Outfit', monospace; font-variant-numeric: tabular-nums; }
   
   ::selection { background: rgba(0, 229, 255, 0.3); color: #fff; }
 }
