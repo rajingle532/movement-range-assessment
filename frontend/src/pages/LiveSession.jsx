@@ -22,19 +22,14 @@ const LiveSession = () => {
     const [saveSuccess, setSaveSuccess] = useState('');
     const [saveError, setSaveError] = useState('');
 
-    // ✅ FIX: Stop camera on mount-cleanup AND on every page navigation
+    // Stop camera on unmount
     useEffect(() => {
         startVideo();
         return () => {
-            // Force kill ALL media tracks so camera light turns off
             stopVideo();
-            if (navigator.mediaDevices) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(stream => stream.getTracks().forEach(track => track.stop()))
-                    .catch(() => {}); // ignore if no stream
-            }
         };
-    }, []); // empty deps — run only on mount/unmount
+    }, [startVideo, stopVideo]);
+
 
     // Active session duration timer
     useEffect(() => {
