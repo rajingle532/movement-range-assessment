@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCamera } from '../hooks/useCamera';
 import { useWebSocket } from '../hooks/useWebSocket';
 import AngleGauge from '../components/AngleGauge';
@@ -11,6 +12,7 @@ const LiveSession = () => {
     const { videoRef, startVideo, stopVideo, error: cameraError, isCameraReady } = useCamera();
     const { isConnected, angles, status, annotatedFrame, sendFrame } = useWebSocket('ws://localhost:8000/ws/stream');
     const canvasRef = useRef(null);
+    const navigate = useNavigate();
     
     // Timer state
     const [seconds, setSeconds] = useState(0);
@@ -145,6 +147,15 @@ const LiveSession = () => {
                             className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white px-5.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md shadow-blue-600/10 disabled:opacity-50 cursor-pointer"
                         >
                             {isSaving ? "Archiving..." : "Archive Results"}
+                        </button>
+                        <button 
+                            onClick={() => {
+                                stopVideo();
+                                navigate('/dashboard');
+                            }}
+                            className="bg-slate-900 border border-slate-800 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 text-slate-400 px-5.5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all cursor-pointer"
+                        >
+                            End Session
                         </button>
                     </div>
                 </div>

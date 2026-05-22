@@ -1,12 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Calendar, User, Activity } from 'lucide-react';
+import { ChevronRight, Calendar, User, Activity, FileText } from 'lucide-react';
 
 const PatientCard = ({ patient }) => {
     const navigate = useNavigate();
     const formattedDate = patient.created_at 
         ? new Date(patient.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         : 'N/A';
+
+    const handleDownloadPDF = (e) => {
+        e.stopPropagation(); // prevent navigation when clicking the download button
+        window.open(`http://localhost:8000/api/reports/${patient.id}`, '_blank');
+    };
 
     return (
         <div 
@@ -40,7 +45,16 @@ const PatientCard = ({ patient }) => {
                     }`}>
                         {patient.status || 'Active'}
                     </span>
-                    <ChevronRight size={16} className="text-slate-500 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
+                    
+                    <button 
+                        onClick={handleDownloadPDF}
+                        title="Download Clinical Report"
+                        className="bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 p-1.5 rounded-lg transition-colors"
+                    >
+                        <FileText size={16} />
+                    </button>
+
+                    <ChevronRight size={16} className="text-slate-500 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all ml-1" />
                 </div>
             </div>
         </div>
