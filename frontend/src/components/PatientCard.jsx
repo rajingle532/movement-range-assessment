@@ -15,16 +15,16 @@ const PatientCard = ({ patient, index = 0 }) => {
 
     return (
         <div
-            className={`glass-biopunk rounded-xl p-4 transition-all duration-300 group hover:border-[#00e5ff]/40 hover:-translate-y-1 stagger-${(index % 5) + 1} animate-fade-in-up`}
+            className={`glass-biopunk rounded-xl p-4 transition-all duration-300 group hover:border-[#00e5ff]/40 hover:-translate-y-1 stagger-${(index % 5) + 1} animate-fade-in-up shrink-0`}
         >
             <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#0b1426] to-[#070d1a] border border-[#00e5ff]/30 flex items-center justify-center text-[#00e5ff] shadow-[0_0_10px_rgba(0,229,255,0.1)] shrink-0">
                         <User size={18} />
                     </div>
-                    <div>
-                        <h4 className="text-[#e2e8f0] font-bold text-sm tracking-wide">{patient.name}</h4>
-                        <div className="inline-block mt-1 bg-[#ffb300]/10 border border-[#ffb300]/20 text-[#ffb300] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    <div className="min-w-0 flex-1">
+                        <h4 className="text-[#e2e8f0] font-bold text-sm tracking-wide truncate">{patient.name}</h4>
+                        <div className="inline-block mt-1 bg-[#ffb300]/10 border border-[#ffb300]/20 text-[#ffb300] text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider truncate max-w-[150px] sm:max-w-[200px]">
                             {patient.condition || 'General Rehab'}
                         </div>
                     </div>
