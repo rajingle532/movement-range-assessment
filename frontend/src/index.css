@@ -226,3 +226,44 @@
 /* ── Recharts Overrides ── */
 .recharts-tooltip-cursor { fill: rgba(255,255,255,0.05); }
 .recharts-cartesian-axis-tick-value { font-family: 'DM Mono', monospace; font-size: 10px; fill: #64748b; }
+
+/* ── ROM Threshold Slider ── */
+.rom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  border-radius: 99px;
+  outline: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  background: rgba(255,255,255,0.08);
+}
+.rom-slider:hover { opacity: 0.9; }
+.rom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.4);
+  cursor: pointer;
+  box-shadow: 0 0 8px currentColor;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.rom-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+.rom-slider::-moz-range-thumb {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+
+/* ── Alert pulse animation for threshold banner ── */
+@keyframes alert-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.threshold-alert-pulse { animation: alert-pulse 1.8s ease-in-out infinite; }
+
