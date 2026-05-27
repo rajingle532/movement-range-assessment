@@ -7,6 +7,7 @@
   --biopunk-cyan: #00e5ff;
   --biopunk-green: #39ff14;
   --biopunk-amber: #ffb300;
+  --biopunk-red: #ff3e3e;
   --biopunk-card-bg: rgba(11, 20, 38, 0.6);
   --biopunk-border: rgba(0, 229, 255, 0.15);
 }
@@ -40,7 +41,7 @@
   }
 
   /* ── Glassmorphism ── */
-  .glass-biopunk {
+  .glass-biopunk, .glass-panel {
     background: var(--biopunk-card-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -51,9 +52,10 @@
     position: relative;
     overflow: hidden;
   }
+  .glass-panel { border-radius: 12px; padding: 1.5rem; }
   
   /* Noise overlay for glass */
-  .glass-biopunk::before {
+  .glass-biopunk::before, .glass-panel::before {
     content: "";
     position: absolute;
     inset: 0;
@@ -62,7 +64,7 @@
     z-index: 0;
   }
   
-  .glass-biopunk > * {
+  .glass-biopunk > *, .glass-panel > * {
     position: relative;
     z-index: 1;
   }
@@ -85,6 +87,54 @@
     gap: 8px;
     position: relative;
     overflow: hidden;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #2563eb, #06b6d4);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1d4ed8, #0891b2);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05));
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-danger:hover {
+    background: rgba(239,68,68,0.2);
+    border-color: rgba(239,68,68,0.5);
+    box-shadow: 0 0 15px rgba(239,68,68,0.2);
+    color: #fca5a5;
   }
   
   .btn-biopunk::after {
@@ -110,7 +160,6 @@
   .btn-biopunk:hover {
     background: rgba(0,229,255,0.15);
     box-shadow: 0 0 15px rgba(0,229,255,0.4);
-    text-shadow: 0 0 5px rgba(0,229,255,0.5);
   }
 
   /* Primary pulse button */
@@ -158,8 +207,14 @@
   100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); }
 }
 
+@keyframes live-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
 .animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .animate-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.live-dot { animation: live-blink 1.4s ease-in-out infinite; }
 
 /* Stagger Utilities */
 .stagger-1 { animation-delay: 100ms; }

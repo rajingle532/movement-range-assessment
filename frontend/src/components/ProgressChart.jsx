@@ -116,6 +116,28 @@ const ProgressChart = () => {
                 </div>
             </div>
 
+            {/* Chart Legend */}
+            <div className="flex items-center gap-5 mt-1 mb-2">
+                {(activeJoint === 'all' || activeJoint === 'elbow') && (
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-[3px] rounded-full bg-[#00e5ff]" />
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Elbow</span>
+                    </div>
+                )}
+                {(activeJoint === 'all' || activeJoint === 'knee') && (
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-[3px] rounded-full bg-[#39ff14]" />
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Knee</span>
+                    </div>
+                )}
+                {(activeJoint === 'all' || activeJoint === 'shoulder') && (
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-[3px] rounded-full bg-[#ffb300]" />
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Shoulder</span>
+                    </div>
+                )}
+            </div>
+
             {/* Recharts Area Chart */}
             <div className="h-[280px] w-full mt-2 relative">
                 {isLoading ? (

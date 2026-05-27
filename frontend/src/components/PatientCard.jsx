@@ -52,8 +52,12 @@ const PatientCard = ({ patient, index = 0 }) => {
 
             {/* Default State: Date */}
             <div className="flex items-center justify-between mt-4 border-t border-[#00e5ff]/10 pt-3 group-hover:hidden">
-                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Last Session</span>
-                <span className="font-mono-data text-slate-300 text-[11px]">Oct 24, 2026</span>
+                <span className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Registered</span>
+                <span className="font-mono-data text-slate-300 text-[11px]">
+                    {patient.created_at
+                        ? new Date(patient.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : 'N/A'}
+                </span>
             </div>
 
             {/* Hover State: Quick Actions */}

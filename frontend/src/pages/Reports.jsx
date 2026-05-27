@@ -38,7 +38,7 @@ const Reports = () => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-950 bg-grid-pattern pb-16 text-slate-100 relative overflow-hidden">
+        <div className="min-h-screen bg-grid-biopunk pb-16 text-slate-100 relative overflow-hidden">
             <div className="absolute top-[10%] right-[5%] w-[500px] h-[500px] rounded-full bg-purple-600/10 blur-[150px] pointer-events-none" />
             <div className="absolute bottom-[20%] left-[5%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none" />
             <div className="max-w-6xl mx-auto px-8 pt-10 animate-fade-in-up">

@@ -108,7 +108,7 @@ const LiveSession = () => {
     };
 
     return (
-        <div className="min-h-screen bg-grid pb-8 text-slate-100 relative overflow-hidden">
+        <div className="min-h-screen bg-grid-biopunk pb-8 text-slate-100 relative overflow-hidden">
             {/* Glows */}
             <div style={{ position:'absolute', top:'10%', right:'-5%', width:'450px', height:'450px', borderRadius:'50%', background:'rgba(59,130,246,0.08)', filter:'blur(120px)', pointerEvents:'none' }} className="animate-glow" />
             <div style={{ position:'absolute', bottom:'10%', left:'-5%', width:'400px', height:'400px', borderRadius:'50%', background:'rgba(6,182,212,0.07)', filter:'blur(100px)', pointerEvents:'none' }} className="animate-glow" />
@@ -118,7 +118,7 @@ const LiveSession = () => {
             <div className="max-w-7xl mx-auto px-6 pt-6 animate-fade-in-up">
 
                 {/* ── Top Status Bar ── */}
-                <div className="glass rounded-2xl px-5 py-3.5 mb-6 flex flex-wrap justify-between items-center gap-4">
+                <div className="glass-biopunk rounded-2xl px-5 py-3.5 mb-6 flex flex-wrap justify-between items-center gap-4">
                     <div className="flex items-center gap-3">
                         {/* Live Badge */}
                         <div style={{ display:'flex', alignItems:'center', gap:'8px', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.25)', borderRadius:'99px', padding:'5px 12px' }}>
@@ -194,7 +194,7 @@ const LiveSession = () => {
                         <AngleGauge angle={angles.shoulder} label="Shoulder" status={status.shoulder} />
 
                         {/* Guidance Card */}
-                        <div className="glass rounded-2xl p-5" style={{ borderLeft:'3px solid rgba(59,130,246,0.5)' }}>
+                        <div className="glass-biopunk rounded-2xl p-5" style={{ borderLeft:'3px solid rgba(59,130,246,0.5)' }}>
                             <p style={{ color:'#475569', fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em', marginBottom:'10px', display:'flex', alignItems:'center', gap:'6px' }}>
                                 <HelpCircle size={12} style={{ color:'#60a5fa' }} /> Clinical Guidance
                             </p>

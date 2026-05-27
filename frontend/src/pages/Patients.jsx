@@ -85,7 +85,7 @@ const Patients = () => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-950 p-8 text-slate-100 font-sans relative overflow-hidden">
+        <div className="min-h-screen bg-grid-biopunk p-8 text-slate-100 font-sans relative overflow-hidden">
             {/* Soft glows */}
             <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 blur-[130px] pointer-events-none" />
             <div className="absolute bottom-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cyan-600/5 blur-[130px] pointer-events-none" />
@@ -157,7 +157,7 @@ const Patients = () => {
                             </div>
                         )}
 
-                        <form onSubmit={handleRegister} className="space-y-4.5">
+                        <form onSubmit={handleRegister} className="space-y-5">
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 pl-0.5">
                                     Patient Full Name

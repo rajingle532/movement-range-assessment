@@ -1,65 +1,163 @@
-# Movement Range Assessment (ROM) System
+# 🧠 ROM Rehab AI — Range of Motion Assessment Platform
 
-An AI-powered Rehabilitation Therapy system designed to assess the Range of Motion (ROM) of patients using Computer Vision and Real-time data streaming.
+An AI-powered Rehabilitation Therapy system designed to assess the **Range of Motion (ROM)** of patients using Computer Vision and real-time data streaming.
+
+[![Tech Stack](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?style=flat&logo=react)](https://react.dev)
+[![Tech Stack](https://img.shields.io/badge/Backend-FastAPI%20%2B%20Python-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com)
+[![Tech Stack](https://img.shields.io/badge/CV-MediaPipe%20%2B%20OpenCV-FF6F00?style=flat)](https://mediapipe.dev)
+[![Tech Stack](https://img.shields.io/badge/DB-SQLite%20%2B%20SQLAlchemy-003B57?style=flat)](https://www.sqlalchemy.org)
+
+---
 
 ## 🚀 Overview
-This system allows therapists to monitor patient movements in real-time. Using **MediaPipe Pose Estimation**, the application calculates joint angles (e.g., Elbow, Knee, Shoulder) and provides immediate feedback on whether the movement falls within normal or restricted ranges.
+
+This platform allows physical therapists to:
+- **Monitor patient movements in real-time** via webcam
+- **Calculate joint angles** (Elbow Flexion, Knee Flexion, Shoulder Abduction) using **MediaPipe Pose Estimation**
+- **Classify mobility status** — Normal / Mild Restriction / Severe Restriction
+- **Register & manage patients** with a full clinical profile
+- **Download PDF reports** per patient
+- **Export patient data as CSV**
+- **Track ROM recovery over time** via interactive area charts
+
+---
 
 ## 🏗️ Architecture
-- **Frontend**: React 18 (Vite) + Tailwind CSS for a premium, responsive UI.
-- **Backend**: FastAPI (Python) handling logic, data persistence, and CV processing.
-- **CV Engine**: MediaPipe + OpenCV for real-time skeleton tracking and angle calculation.
-- **Streaming**: WebSocket (WS) for low-latency video frame and data exchange.
-- **Database**: SQLite with SQLAlchemy ORM.
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18 (Vite) + TailwindCSS — biopunk dark aesthetic |
+| **Backend** | FastAPI (Python 3.10+) with async endpoints |
+| **CV Engine** | MediaPipe Pose + OpenCV for skeleton tracking |
+| **Streaming** | WebSocket (`ws://localhost:8000/ws/stream`) — 10 FPS |
+| **Database** | SQLite with SQLAlchemy ORM |
+| **Reports** | Server-side PDF generation via ReportLab |
+
+---
 
 ## 📁 Project Structure
+
 ```text
-backend/     - FastAPI server, CV engine, and database logic
-frontend/    - React application with Tailwind CSS
-docs/        - Project documentation and diagrams
+movement-range-assessment/
+├── backend/
+│   ├── cv/           # MediaPipe pose estimation + angle calculation
+│   ├── database/     # SQLAlchemy models and DB engine
+│   ├── routers/      # FastAPI route handlers (patients, sessions, reports, stream, auth)
+│   ├── schemas/      # Pydantic request/response schemas
+│   ├── services/     # Business logic (pose processing, PDF generation)
+│   ├── config.py     # App settings
+│   ├── main.py       # FastAPI app entry point
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # Navbar, PatientCard, AngleGauge, JointTable, ProgressChart, SkeletonViewer
+│   │   ├── hooks/        # useCamera, useWebSocket
+│   │   ├── pages/        # Dashboard, Patients, LiveSession, Reports, Login
+│   │   ├── services/     # api.js (Axios client)
+│   │   ├── App.jsx       # Router + Protected routes
+│   │   └── index.css     # Biopunk design system
+│   ├── index.html
+│   └── package.json
+└── README.md
 ```
+
+---
 
 ## 🛠️ Setup Instructions
 
+### Prerequisites
+- **Python 3.10+**
+- **Node.js 18+**
+- A webcam (for Live Session)
+
+---
+
 ### Backend Setup
-1. Navigate to the backend folder:
-   ```bash
-   cd backend
-   ```
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Run the server:
-   ```bash
-   python main.py
-   ```
+
+```bash
+# 1. Navigate to backend
+cd backend
+
+# 2. Create a virtual environment
+python -m venv venv
+
+# 3. Activate it
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+# 4. Install dependencies
+pip install -r requirements.txt
+
+# 5. (Optional) Seed database with sample patients
+python seed_db.py
+
+# 6. Start the server
+python main.py
+# Backend runs at http://localhost:8000
+# API Docs: http://localhost:8000/docs
+```
+
+---
 
 ### Frontend Setup
-1. Navigate to the frontend folder:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
+
+```bash
+# 1. Navigate to frontend
+cd frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Start dev server
+npm run dev
+# App runs at http://localhost:5173
+```
+
+---
+
+## 🔑 Demo Credentials
+
+| Field | Value |
+|---|---|
+| Email | `therapist@rom.com` |
+| Password | `password123` |
+
+---
 
 ## 📡 WebSocket API
-The system uses a WebSocket connection at `ws://localhost:8000/ws/stream` to stream base64 encoded video frames from the frontend to the backend and receive annotated frames with joint data back.
 
-## 📝 API Overview
-- `GET /`: Health check
-- `POST /api/auth/login`: User authentication
-- `GET /api/patients`: List all patients
-- `POST /api/sessions/start`: Initialize a new assessment session
-- `GET /api/reports/{id}`: Download PDF report
+The live session streams base64-encoded JPEG frames from the browser to the backend:
+
+```
+Client → WS: { "frame": "<base64-jpeg>" }
+Server → WS: { "angles": { "elbow": 87.3, "knee": 142.1, "shoulder": 65.0 }, "status": { ... }, "annotated_frame": "<base64-jpeg>" }
+```
+
+---
+
+## 📝 REST API Overview
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | Health check |
+| `POST` | `/api/auth/login` | User authentication |
+| `GET` | `/api/patients/` | List all patients |
+| `POST` | `/api/patients/` | Register new patient |
+| `GET` | `/api/patients/export/csv` | Export all patients as CSV |
+| `GET` | `/api/sessions/{patient_id}` | Get sessions for a patient |
+| `POST` | `/api/sessions/` | Save a new session |
+| `GET` | `/api/reports/{patient_id}` | Download PDF report |
+
+---
+
+## ✨ Key Features
+
+- 🎥 **Real-time CV Pipeline** — MediaPipe Pose @ 10 FPS over WebSocket
+- 📊 **Interactive ROM Charts** — Area charts with joint filter toggles
+- 👥 **Patient Registry** — Add, search, and manage patient profiles
+- 📄 **PDF Report Generation** — Per-patient clinical reports
+- 🔐 **Auth Guard** — Protected routes with localStorage session
+- 📱 **Fully Responsive** — Mobile hamburger nav with slide-out drawer
+- 🎨 **Premium Design** — Biopunk dark UI with glassmorphism and glow animations

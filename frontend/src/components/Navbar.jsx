@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Activity, FileText, LogOut, Zap, Clock } from 'lucide-react';
+import { LayoutDashboard, Users, Activity, FileText, LogOut, Zap, Clock, Menu, X } from 'lucide-react';
 
 const Navbar = () => {
     const location = useLocation();
@@ -8,6 +8,7 @@ const Navbar = () => {
     const [therapist, setTherapist] = useState({ name: 'Dr. Rahul Ingle', role: 'Chief Therapist', avatar: 'RI' });
     const [scrolled, setScrolled] = useState(false);
     const [sessionTime, setSessionTime] = useState(0);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     useEffect(() => {
         const stored = localStorage.getItem('therapistUser');
@@ -19,6 +20,11 @@ const Navbar = () => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Close mobile menu on route change
+    useEffect(() => {
+        setMobileOpen(false);
+    }, [location.pathname]);
 
     // Global session timer for the presentation
     useEffect(() => {
@@ -49,6 +55,7 @@ const Navbar = () => {
     ];
 
     return (
+        <>
         <nav
             style={{
                 background: scrolled ? 'var(--biopunk-card-bg)' : 'transparent',
@@ -72,7 +79,7 @@ const Navbar = () => {
                 </div>
             </Link>
 
-            {/* Center Nav Pills */}
+            {/* Center Nav Pills — desktop only */}
             <div className="hidden lg:flex items-center gap-2 bg-[#0b1426]/80 p-1.5 rounded-full border border-[#00e5ff]/20">
                 {navItems.map((item) => {
                     const Icon = item.icon;
@@ -97,8 +104,8 @@ const Navbar = () => {
             </div>
 
             {/* Right Side */}
-            <div className="flex items-center gap-5">
-                {/* Session Timer */}
+            <div className="flex items-center gap-4">
+                {/* Session Timer — desktop only */}
                 <div className="hidden md:flex flex-col items-end">
                     <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
                         <Clock size={10} className="text-[#00e5ff]" /> Session Time
@@ -108,8 +115,8 @@ const Navbar = () => {
 
                 <div className="h-8 w-px bg-slate-800 hidden md:block" />
 
-                <div className="flex items-center gap-3">
-                    <div className="hidden md:flex flex-col items-end">
+                <div className="hidden md:flex items-center gap-3">
+                    <div className="flex flex-col items-end">
                         <span className="text-sm font-bold text-white leading-none">{therapist.name}</span>
                         <span className="text-[10px] font-bold text-[#ffb300] uppercase tracking-widest mt-1 bg-[#ffb300]/10 px-2 py-0.5 rounded-full border border-[#ffb300]/30">{therapist.role}</span>
                     </div>
@@ -121,14 +128,82 @@ const Navbar = () => {
                     
                     <button
                         onClick={handleLogout}
-                        className="p-2.5 text-slate-400 hover:text-[#ffb300] hover:bg-[#ffb300]/10 rounded-lg transition-all border border-transparent hover:border-[#ffb300]/30 ml-2"
+                        className="p-2.5 text-slate-400 hover:text-[#ffb300] hover:bg-[#ffb300]/10 rounded-lg transition-all border border-transparent hover:border-[#ffb300]/30"
                         title="End Session & Logout"
                     >
                         <LogOut size={16} />
                     </button>
                 </div>
+
+                {/* Mobile Hamburger */}
+                <button
+                    onClick={() => setMobileOpen(!mobileOpen)}
+                    className="lg:hidden p-2 text-slate-400 hover:text-[#00e5ff] hover:bg-[#00e5ff]/10 rounded-lg transition-all border border-transparent hover:border-[#00e5ff]/20"
+                    aria-label="Toggle mobile menu"
+                >
+                    {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
             </div>
         </nav>
+
+        {/* Mobile Slide-down Drawer */}
+        {mobileOpen && (
+            <div
+                className="lg:hidden fixed inset-0 z-40"
+                onClick={() => setMobileOpen(false)}
+            >
+                <div
+                    className="absolute top-[72px] left-0 right-0 mx-4"
+                    onClick={e => e.stopPropagation()}
+                    style={{
+                        background: 'rgba(7, 13, 26, 0.97)',
+                        backdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(0,229,255,0.15)',
+                        borderRadius: '16px',
+                        padding: '12px',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+                        animation: 'fadeInUp 0.25s ease both',
+                    }}
+                >
+                    {/* Mobile Nav Items */}
+                    <div className="flex flex-col gap-1 mb-4">
+                        {navItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = location.pathname === item.path;
+                            return (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                                        isActive
+                                            ? 'bg-[#00e5ff]/10 text-[#00e5ff] border border-[#00e5ff]/20'
+                                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                                >
+                                    <Icon size={16} />
+                                    {item.name}
+                                </Link>
+                            );
+                        })}
+                    </div>
+
+                    {/* Mobile Footer */}
+                    <div className="border-t border-slate-800 pt-4 flex items-center justify-between px-2">
+                        <div>
+                            <p className="text-sm font-bold text-white">{therapist.name}</p>
+                            <p className="text-[10px] font-bold text-[#ffb300] uppercase tracking-widest mt-0.5">{therapist.role}</p>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-[#f87171] bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-all uppercase tracking-wider"
+                        >
+                            <LogOut size={14} /> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 
