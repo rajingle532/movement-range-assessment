@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import CountUp from 'react-countup';
 import PatientCard from '../components/PatientCard';
 import ProgressChart from '../components/ProgressChart';
-import { Plus, Users, TrendingUp, Clock, AlertCircle, RefreshCw, Download, Activity, ArrowRight } from 'lucide-react';
-import { api } from '../services/api';
+import SessionComparisonChart from '../components/SessionComparisonChart';
+import { Plus, Users, TrendingUp, Clock, AlertCircle, RefreshCw, Download, Activity, ArrowRight, GitCompare } from 'lucide-react';
+import { api, API_URL } from '../services/api';
 
 const SparklineSVG = ({ color }) => (
     <svg className="w-16 h-8 overflow-visible opacity-50 group-hover:opacity-100 transition-opacity" viewBox="0 0 100 40">
@@ -41,6 +42,8 @@ const Dashboard = () => {
     const [stats, setStats] = useState({ total: 0, active: 0, sessionsCount: 0, target: 88.4 });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    // Map of patientId → romProgress (0-100)
+    const [romProgressMap, setRomProgressMap] = useState({});
     const navigate = useNavigate();
 
     const fetchDashboardData = async () => {
@@ -50,13 +53,40 @@ const Dashboard = () => {
             const data = await api.getPatients();
             setPatients(data);
             let totalSessions = 0;
+            const progressMap = {};
+
             for (const patient of data) {
                 try {
                     const sessions = await api.getPatientSessions(patient.id);
                     totalSessions += sessions.length;
-                } catch (e) {}
+
+                    // Compute ROM progress from the latest session's measurements
+                    if (sessions.length > 0) {
+                        const latest = sessions.reduce((a, b) =>
+                            new Date(a.date) > new Date(b.date) ? a : b
+                        );
+                        if (latest.measurements && latest.measurements.length > 0) {
+                            const normalCount = latest.measurements.filter(
+                                m => m.status === 'Normal'
+                            ).length;
+                            progressMap[patient.id] = Math.round(
+                                (normalCount / latest.measurements.length) * 100
+                            );
+                        } else {
+                            // No measurements yet — base on session count as rough proxy
+                            progressMap[patient.id] = Math.min(100, sessions.length * 15);
+                        }
+                    } else {
+                        progressMap[patient.id] = 0;
+                    }
+                } catch (e) {
+                    progressMap[patient.id] = 0;
+                }
             }
-            setStats({ total: data.length, active: data.length, sessionsCount: totalSessions || 26, target: 88.4 });
+
+            setRomProgressMap(progressMap);
+            // No hardcoded fallback — show the real count (even if 0)
+            setStats({ total: data.length, active: data.length, sessionsCount: totalSessions, target: 88.4 });
         } catch (err) {
             setError('Could not connect to clinical server. Please start the backend.');
         } finally {
@@ -91,7 +121,7 @@ const Dashboard = () => {
                             <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
                             <span className="hidden sm:inline">Sync</span>
                         </button>
-                        <button onClick={() => window.open('http://localhost:8000/api/patients/export/csv', '_blank')} className="btn-biopunk !border-[#39ff14]/30 !text-[#39ff14] hover:!bg-[#39ff14]/10">
+                        <button onClick={() => window.open(`${API_URL}/api/patients/export/csv`, '_blank')} className="btn-biopunk !border-[#39ff14]/30 !text-[#39ff14] hover:!bg-[#39ff14]/10">
                             <Download size={15} />
                             <span className="hidden sm:inline">Export</span>
                         </button>
@@ -173,13 +203,18 @@ const Dashboard = () => {
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-grow max-h-[300px]">
-                                    {patients.slice(0, 5).map((p, i) => <PatientCard key={p.id} patient={p} index={i} />)}
+                                {patients.slice(0, 5).map((p, i) => <PatientCard key={p.id} patient={p} index={i} romProgress={romProgressMap[p.id] ?? 0} />)}
                                 </div>
                             )}
                         </div>
 
                     </div>
                 </div>
+                {/* ── Session Comparison Chart — full width ── */}
+                <div className="mt-8 animate-fade-in-up stagger-5">
+                    <SessionComparisonChart />
+                </div>
+
             </div>
         </div>
     );

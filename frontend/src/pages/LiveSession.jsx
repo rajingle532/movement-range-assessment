@@ -8,9 +8,13 @@ import SkeletonViewer from '../components/SkeletonViewer';
 import {
     Activity, Timer, Save, AlertCircle, CheckCircle, HelpCircle,
     TrendingUp, Award, X, BarChart2, ArrowRight, Clock,
-    Settings, ChevronDown, ChevronUp, AlertTriangle, Target, RotateCcw,
+    ChevronDown, ChevronUp, AlertTriangle, Target, RotateCcw, User,
 } from 'lucide-react';
 import { api } from '../services/api';
+
+// Derive WebSocket URL from the Vite env variable (falls back to localhost)
+const _apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const WS_URL = _apiBase.replace(/^http/, 'ws') + '/ws/stream';
 
 // ─── Default Clinical Thresholds ─────────────────────────────────────────────
 const DEFAULT_THRESHOLDS = { elbow: 120, knee: 110, shoulder: 90 };
@@ -302,9 +306,27 @@ const SessionSummaryModal = ({ summary, onSaveAndExit, onExitWithoutSaving, isSa
 // ─── Main LiveSession Component ───────────────────────────────────────────────
 const LiveSession = () => {
     const { videoRef, startVideo, stopVideo, error: cameraError, isCameraReady } = useCamera();
-    const { isConnected, angles, status, annotatedFrame, sendFrame } = useWebSocket('ws://localhost:8000/ws/stream');
+    const { isConnected, angles, status, annotatedFrame, sendFrame } = useWebSocket(WS_URL);
     const canvasRef  = useRef(null);
     const navigate   = useNavigate();
+
+    // ── Patient selector ──
+    const [patients,           setPatients]           = useState([]);
+    const [selectedPatientId,  setSelectedPatientId]  = useState(null);
+    const [isPatientsLoading,  setIsPatientsLoading]  = useState(true);
+
+    // Fetch patients list on mount so user can pick who is being assessed
+    useEffect(() => {
+        api.getPatients()
+            .then(data => {
+                setPatients(data);
+                if (data.length > 0) setSelectedPatientId(data[0].id);
+            })
+            .catch(() => {})
+            .finally(() => setIsPatientsLoading(false));
+    }, []);
+
+    const selectedPatient = patients.find(p => p.id === selectedPatientId) || null;
 
     // ── Timer ──
     const [seconds, setSeconds] = useState(0);
@@ -425,18 +447,31 @@ const LiveSession = () => {
         return () => clearInterval(interval);
     }, [isCameraReady, isConnected, sendFrame, videoRef]);
 
-    // ── Top-bar Archive (unchanged behaviour) ──
+    // ── Helper: save a session + its individual joint measurements ──
+    const _persistSession = async (patientId, notes, peakAngles, lastStatus) => {
+        const newSession = await api.createSession({ patient_id: patientId, notes });
+        // Save individual measurements so charts can display real ROM data
+        const measurements = JOINT_META.map(({ key, label }) => ({
+            joint_name: key,
+            angle: Math.round(peakAngles[key]),
+            status: lastStatus[key] || 'Normal',
+        }));
+        await api.saveMeasurements(newSession.id, measurements);
+        return newSession;
+    };
+
+    // ── Top-bar Quick Archive ──
     const handleSaveSession = async () => {
         setSaveError(''); setSaveSuccess(''); setIsSaving(true);
         try {
-            const patients = await api.getPatients();
-            if (patients.length === 0) { setSaveError('Please register a patient first.'); setIsSaving(false); return; }
-            const p = patients[0];
-            await api.createSession({
-                patient_id: p.id,
-                notes: `Live ROM session. Elbow: ${Math.round(angles.elbow)}°, Knee: ${Math.round(angles.knee)}°, Shoulder: ${Math.round(angles.shoulder)}°`,
-            });
-            setSaveSuccess(`Session archived under: ${p.name}`);
+            if (!selectedPatient) {
+                setSaveError('Please select a patient first.');
+                setIsSaving(false);
+                return;
+            }
+            const notes = `Live ROM session. Elbow: ${Math.round(angles.elbow)}°, Knee: ${Math.round(angles.knee)}°, Shoulder: ${Math.round(angles.shoulder)}°`;
+            await _persistSession(selectedPatient.id, notes, peakAnglesRef.current, finalStatusRef.current);
+            setSaveSuccess(`Session archived under: ${selectedPatient.name}`);
             setTimeout(() => setSaveSuccess(''), 4000);
         } catch { setSaveError('Failed to archive session.'); }
         finally { setIsSaving(false); }
@@ -460,14 +495,10 @@ const LiveSession = () => {
     const handleModalSaveAndExit = async () => {
         setIsSavingModal(true);
         try {
-            const patients = await api.getPatients();
-            if (patients.length > 0) {
-                const p = patients[0];
-                const { peakAngles: pk, avgAngles: av } = summary;
-                await api.createSession({
-                    patient_id: p.id,
-                    notes: `Session Summary — Duration: ${formatTime(summary.duration)} | Peak: Elbow ${Math.round(pk.elbow)}°, Knee ${Math.round(pk.knee)}°, Shoulder ${Math.round(pk.shoulder)}° | Avg: Elbow ${Math.round(av.elbow)}°, Knee ${Math.round(av.knee)}°, Shoulder ${Math.round(av.shoulder)}°`,
-                });
+            if (selectedPatient && summary) {
+                const { peakAngles: pk, avgAngles: av, finalStatus: fs, duration } = summary;
+                const notes = `Session Summary — Duration: ${formatTime(duration)} | Peak: Elbow ${Math.round(pk.elbow)}°, Knee ${Math.round(pk.knee)}°, Shoulder ${Math.round(pk.shoulder)}° | Avg: Elbow ${Math.round(av.elbow)}°, Knee ${Math.round(av.knee)}°, Shoulder ${Math.round(av.shoulder)}°`;
+                await _persistSession(selectedPatient.id, notes, pk, fs);
             }
         } catch (err) { console.error('Error saving session from modal:', err); }
         finally { setIsSavingModal(false); navigate('/'); }
@@ -513,6 +544,27 @@ const LiveSession = () => {
                         <div style={{ display:'flex', alignItems:'center', gap:'7px', background: isCameraReady ? 'rgba(59,130,246,0.08)' : 'rgba(245,158,11,0.08)', border:`1px solid ${isCameraReady ? 'rgba(59,130,246,0.2)' : 'rgba(245,158,11,0.2)'}`, borderRadius:'99px', padding:'5px 12px' }}>
                             <div style={{ width:'6px', height:'6px', borderRadius:'50%', background: isCameraReady ? '#3b82f6' : '#f59e0b' }} />
                             <span style={{ color: isCameraReady ? '#60a5fa' : '#fbbf24', fontSize:'10px', fontWeight:900, textTransform:'uppercase', letterSpacing:'0.1em' }}>Cam: {isCameraReady ? 'Ready' : 'Init...'}</span>
+                        </div>
+                        {/* ── Patient Selector ── */}
+                        <div style={{ display:'flex', alignItems:'center', gap:'7px', background:'rgba(167,139,250,0.08)', border:'1px solid rgba(167,139,250,0.25)', borderRadius:'99px', padding:'4px 10px 4px 8px' }}>
+                            <User size={11} color="#a78bfa" />
+                            {isPatientsLoading ? (
+                                <span style={{ color:'#a78bfa', fontSize:'10px', fontWeight:900 }}>Loading…</span>
+                            ) : patients.length === 0 ? (
+                                <span style={{ color:'#f87171', fontSize:'10px', fontWeight:900 }}>No Patients</span>
+                            ) : (
+                                <select
+                                    value={selectedPatientId || ''}
+                                    onChange={e => setSelectedPatientId(Number(e.target.value))}
+                                    style={{ background:'transparent', border:'none', color:'#a78bfa', fontSize:'10px', fontWeight:900, outline:'none', cursor:'pointer', textTransform:'uppercase', letterSpacing:'0.08em' }}
+                                >
+                                    {patients.map(p => (
+                                        <option key={p.id} value={p.id} style={{ background:'#0b1426', color:'#fff' }}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
                         {/* Active threshold indicator */}
                         {thresholdAlerts.length > 0 && (

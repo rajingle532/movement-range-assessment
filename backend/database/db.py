@@ -3,8 +3,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# SQLite database file path
-SQLALCHEMY_DATABASE_URL = "sqlite:///./rehab_app.db"
+# Resolve DB path relative to THIS file's directory, not the working directory.
+# This eliminates the ambiguity when uvicorn is launched from different directories.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_DB_PATH = os.path.join(_HERE, "..", "rehab_app.db")  # backend/../rehab_app.db (project root)
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.normpath(_DB_PATH)}"
 
 # Engine: Database se connect karne wala core component
 engine = create_engine(

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import stream, patients, sessions, auth, reports
+from backend.routers import stream, patients, sessions, auth, reports, measurements
 from backend.config import settings
 from backend.database import models
 from backend.database.db import engine
@@ -34,6 +34,7 @@ app.include_router(auth.router)
 app.include_router(stream.router)
 app.include_router(patients.router)
 app.include_router(sessions.router)
+app.include_router(measurements.router)
 app.include_router(reports.router)
 
 if __name__ == "__main__":

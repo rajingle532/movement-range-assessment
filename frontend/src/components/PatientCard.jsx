@@ -1,17 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Activity, FileText, Play } from 'lucide-react';
+import { API_URL } from '../services/api';
 
-const PatientCard = ({ patient, index = 0 }) => {
+const PatientCard = ({ patient, index = 0, romProgress = 0 }) => {
     const navigate = useNavigate();
 
     const handleDownloadPDF = (e) => {
         e.stopPropagation();
-        window.open(`http://localhost:8000/api/reports/${patient.id}`, '_blank');
+        window.open(`${API_URL}/api/reports/${patient.id}`, '_blank');
     };
-
-    // Calculate a dummy ROM progress based on id or name length just for presentation
-    const romProgress = Math.min(100, 40 + (patient.name.length * 5));
 
     return (
         <div

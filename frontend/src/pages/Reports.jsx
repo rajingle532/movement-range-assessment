@@ -1,7 +1,7 @@
 // Reports.jsx
 import React, { useEffect, useState } from 'react';
 import { FileText, Download, Search, User, AlertCircle, RefreshCw, Activity } from 'lucide-react';
-import { api } from '../services/api';
+import { api, API_URL } from '../services/api';
 
 const Reports = () => {
     const [patients, setPatients] = useState([]);
@@ -27,7 +27,7 @@ const Reports = () => {
 
     const handleDownloadPDF = (patient) => {
         setDownloadingId(patient.id);
-        const url = `http://localhost:8000/api/reports/${patient.id}`;
+        const url = `${API_URL}/api/reports/${patient.id}`;
         window.open(url, '_blank');
         setTimeout(() => setDownloadingId(null), 2000);
     };
@@ -59,7 +59,7 @@ const Reports = () => {
                             <RefreshCw size={16} className={isLoading ? 'animate-spin text-blue-400' : ''} />
                         </button>
                         <button
-                            onClick={() => window.open('http://localhost:8000/api/patients/export/csv', '_blank')}
+                            onClick={() => window.open(`${API_URL}/api/patients/export/csv`, '_blank')}
                             className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md cursor-pointer"
                         >
                             <Download size={14} /> Export All CSV

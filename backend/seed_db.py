@@ -1,9 +1,14 @@
 import sqlite3
+import os
 from datetime import datetime, timedelta
 import random
 
+# Resolve to project root rehab_app.db (same as db.py)
+_HERE = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.normpath(os.path.join(_HERE, "..", "rehab_app.db"))
+
 def seed_database():
-    conn = sqlite3.connect('rehab_app.db')
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     # Clear existing tables to reset cleanly

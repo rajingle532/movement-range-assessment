@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PatientCard from '../components/PatientCard';
 import { UserPlus, Search, AlertCircle, CheckCircle, RefreshCw, Layers, Download } from 'lucide-react';
-import { api } from '../services/api';
+import { api, API_URL } from '../services/api';
 
 const Patients = () => {
     const [patients, setPatients] = useState([]);
@@ -74,8 +74,7 @@ const Patients = () => {
     };
 
     const handleExportCSV = () => {
-        // Direct browser download from the API
-        window.open('http://localhost:8000/api/patients/export/csv', '_blank');
+        window.open(`${API_URL}/api/patients/export/csv`, '_blank');
     };
 
     // Filter patients based on search query
