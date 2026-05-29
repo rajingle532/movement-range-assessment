@@ -16,7 +16,7 @@ const ProgressChart = () => {
             try {
                 const data = await api.getPatients();
                 setPatients(data);
-                if (data.length > 0) setSelectedPatientId(data[0].id);
+                if (data.length > 0) setSelectedPatientId(String(data[0].id));
             } catch (err) {
                 console.error("Error loading patients:", err);
             }

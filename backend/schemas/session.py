@@ -12,6 +12,7 @@ class MeasurementCreate(MeasurementBase):
 
 class Measurement(MeasurementBase):
     id: int
+    session_id: int
     timestamp: datetime
 
     class Config:

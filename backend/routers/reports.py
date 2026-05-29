@@ -143,12 +143,12 @@ def download_report(patient_id: int, db: Session = Depends(get_db)):
                 c.drawString(col_status, y - 3 * mm, "STATUS")
                 y -= 5 * mm
 
-                for m in session.measurements:
+                for m_idx, m in enumerate(session.measurements):
                     if y < 40 * mm:
                         y = new_page()
 
                     # Alternating row bg
-                    row_color = colors.HexColor("#0f172a") if session.measurements.index(m) % 2 == 0 else colors.HexColor("#111827")
+                    row_color = colors.HexColor("#0f172a") if m_idx % 2 == 0 else colors.HexColor("#111827")
                     c.setFillColor(row_color)
                     c.rect(margin, y - 6 * mm, page_w - 2 * margin, 6 * mm, fill=1, stroke=0)
 
